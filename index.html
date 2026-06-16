@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d1117">
+<title>El Negociador · Plan Básico</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Negociador">
+<style>
+  :root{
+    --bg:#0d1117; --bg2:#161b22; --card:#1c2330; --card2:#222b3a;
+    --line:#2c3545; --txt:#e8edf4; --muted:#8b97a8; --accent:#4f9dff;
+    --accent2:#7c5cff; --gold:#ffcb45; --green:#3fcaa1; --red:#ff6b6b;
+    --r:18px; --shadow:0 8px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%,#18223a 0%,var(--bg) 55%);
+    color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+    padding-bottom:90px;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:20px 16px 0}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .brand{font-weight:800;font-size:18px;letter-spacing:.2px}
+  .brand span{color:var(--accent)}
+  .date{font-size:12px;color:var(--muted)}
+  h1{font-size:24px;margin:14px 0 2px;line-height:1.2}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+
+  /* screens */
+  .screen{display:none;animation:fade .35s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* state check */
+  .stateBox{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .stateBox h3{margin:0 0 4px;font-size:15px}
+  .stateBox p{margin:0 0 14px;color:var(--muted);font-size:13px}
+  .stateBtns{display:flex;gap:10px}
+  .stateBtns button{flex:1;border:1px solid var(--line);background:var(--card2);color:var(--txt);
+    padding:12px;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+  .stateBtns button.calm.sel{border-color:var(--green);background:rgba(63,202,161,.15)}
+  .stateBtns button.threat.sel{border-color:var(--red);background:rgba(255,107,107,.15)}
+  .stateMsg{margin-top:12px;font-size:13px;color:var(--txt);background:var(--bg2);border-radius:12px;padding:12px;display:none}
+
+  /* cards */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
+  .card.done{border-color:var(--green)}
+  .cardHead{display:flex;align-items:center;gap:12px;padding:16px;cursor:pointer}
+  .ico{width:42px;height:42px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:20px;
+    background:linear-gradient(135deg,var(--accent2),var(--accent))}
+  .cardHead .t{flex:1}
+  .cardHead .t b{font-size:15px;display:block}
+  .cardHead .t small{color:var(--muted);font-size:12px}
+  .chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:14px;color:var(--bg)}
+  .card.done .chk{background:var(--green);border-color:var(--green)}
+  .card.done .ico{filter:grayscale(.3);opacity:.85}
+
+  .body{display:none;padding:0 16px 16px;border-top:1px solid var(--line)}
+  .card.open .body{display:block}
+  .row{margin:14px 0}
+  .lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:4px}
+  .row p{margin:0;font-size:14px;line-height:1.5;color:var(--txt)}
+  .benefit{display:inline-block;background:rgba(255,203,69,.12);color:var(--gold);
+    border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600}
+  .intro{background:var(--bg2);border-left:3px solid var(--accent);border-radius:0 12px 12px 0;
+    padding:13px 14px;margin:14px 0;font-size:14px;line-height:1.55;color:#d4dce8}
+  .intro b{color:#fff}
+  .whenTag{display:inline-block;background:rgba(124,92,255,.14);color:#b9a8ff;border-radius:10px;
+    padding:7px 11px;font-size:12.5px;font-weight:600;margin-top:6px}
+  .tested{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--green);margin-left:auto}
+  ul.steps{list-style:none;padding:0;margin:6px 0 0}
+  ul.steps li{display:flex;align-items:center;gap:10px;padding:9px 0;font-size:14px;cursor:pointer}
+  ul.steps li .b{width:20px;height:20px;border-radius:6px;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:12px}
+  ul.steps li.on .b{background:var(--accent);border-color:var(--accent)}
+  ul.steps li.on{color:var(--muted);text-decoration:line-through}
+
+  .timer{text-align:center;background:var(--bg2);border-radius:14px;padding:18px;margin-top:8px}
+  .timer .num{font-size:38px;font-weight:800;font-variant-numeric:tabular-nums}
+  .timer button{margin-top:10px;border:none;background:var(--accent);color:#fff;font-weight:700;
+    padding:11px 22px;border-radius:12px;font-size:14px;cursor:pointer}
+  .timer .hint{font-size:12px;color:var(--muted);margin-top:8px}
+
+  .btnDone{width:100%;border:none;background:linear-gradient(135deg,var(--green),#2fae8a);
+    color:#04201a;font-weight:800;padding:13px;border-radius:13px;font-size:14px;cursor:pointer;margin-top:6px}
+  .btnDone.is-done{background:var(--bg2);color:var(--muted);font-weight:600}
+
+  /* breathing orb */
+  .orb-wrap{display:grid;place-items:center;margin:6px 0}
+  .orb{width:150px;height:150px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,var(--accent),var(--accent2));
+    display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;
+    transition:transform 4s ease-in-out;transform:scale(.7);box-shadow:0 0 60px rgba(79,157,255,.35)}
+  .orb.in{transform:scale(1.15);transition-duration:4s}
+  .orb.out{transform:scale(.65);transition-duration:6s}
+
+  /* SOS */
+  .sosIntro{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:16px}
+  .balcony{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-top:16px}
+  .balcony h3{margin:0 0 10px;font-size:15px}
+  .balcony label{font-size:12px;color:var(--muted);display:block;margin:10px 0 4px}
+  .balcony input,.balcony textarea,.night textarea,.night input{
+    width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);
+    border-radius:12px;padding:12px;font-size:14px;font-family:inherit;resize:vertical}
+  .yi{background:rgba(124,92,255,.12);border:1px solid var(--accent2);border-radius:12px;padding:12px;margin-top:12px;font-size:13px;display:none}
+
+  /* night */
+  .night .card{padding:0}
+  .moodRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .moodRow button{border:1px solid var(--line);background:var(--card2);color:var(--txt);
+    border-radius:20px;padding:8px 14px;font-size:13px;cursor:pointer}
+  .moodRow button.sel{border-color:var(--accent);background:rgba(79,157,255,.15)}
+
+  /* celebrate */
+  .celebrate{text-align:center;background:linear-gradient(135deg,rgba(255,203,69,.14),rgba(124,92,255,.14));
+    border:1px solid var(--gold);border-radius:var(--r);padding:22px;margin-top:18px}
+  .celebrate .big{font-size:40px}
+  .celebrate h3{margin:8px 0 4px}
+  .celebrate p{margin:0;color:var(--muted);font-size:13px}
+
+  /* progress */
+  .stat{display:flex;gap:12px;margin-bottom:16px}
+  .stat .box{flex:1;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center}
+  .stat .box b{font-size:28px;display:block}
+  .stat .box small{color:var(--muted);font-size:12px}
+  .compound{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+  .compound h3{margin:0 0 4px;font-size:15px}
+  .compound p{margin:0 0 12px;color:var(--muted);font-size:13px}
+  canvas{width:100%;height:160px;display:block}
+  .log{margin-top:16px}
+  .log h3{font-size:14px;color:var(--muted);margin:0 0 8px}
+  .logItem{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13px}
+  .logItem b{color:var(--green)}
+
+  /* nav */
+  nav{position:fixed;bottom:0;left:0;right:0;background:rgba(13,17,23,.92);
+    backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:20}
+  nav button{flex:1;background:none;border:none;color:var(--muted);padding:11px 0 14px;
+    font-size:11px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+  nav button .ni{font-size:20px}
+  nav button.active{color:var(--accent)}
+  .sosFab{position:fixed;right:16px;bottom:80px;background:var(--red);color:#fff;border:none;
+    width:58px;height:58px;border-radius:50%;font-weight:800;font-size:13px;box-shadow:0 8px 24px rgba(255,107,107,.4);cursor:pointer;z-index:21}
+  .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
+    background:var(--gold);color:#1a1300;font-weight:700;padding:12px 20px;border-radius:30px;
+    font-size:14px;opacity:0;transition:.3s;z-index:30;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* welcome / presentación */
+  .info{background:rgba(79,157,255,.14);border:1px solid var(--line);color:var(--accent);
+    border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}
+  .topRight{display:flex;align-items:center;gap:10px}
+  .welcome{position:fixed;inset:0;z-index:50;overflow-y:auto;display:none;
+    background:radial-gradient(900px 500px at 50% -5%,#1b2742 0%,#0d1117 60%)}
+  .welcome.show{display:block;animation:fade .4s ease}
+  .welcome .inner{max-width:560px;margin:0 auto;padding:40px 22px 48px}
+  .welcome .logo{font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);font-weight:700;text-align:center}
+  .welcome h2{font-size:30px;line-height:1.15;text-align:center;margin:10px 0 6px}
+  .welcome h2 span{background:linear-gradient(120deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .welcome .tag{text-align:center;color:var(--muted);font-size:15px;margin:0 0 26px}
+  .wBlock{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
+  .wBlock h3{margin:0 0 8px;font-size:16px;display:flex;align-items:center;gap:8px}
+  .wBlock p{margin:0;font-size:14px;line-height:1.6;color:#d4dce8}
+  .promise{list-style:none;padding:0;margin:0}
+  .promise li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;font-size:14px;line-height:1.45}
+  .promise li .pi{flex:none;font-size:18px}
+  .timeline{position:relative;padding-left:8px}
+  .tl{display:flex;gap:12px;padding:10px 0;border-left:2px solid var(--line);padding-left:16px;margin-left:6px}
+  .tl b{color:var(--accent);font-size:13px;display:block;margin-bottom:2px}
+  .tl p{margin:0;font-size:13.5px;color:#d4dce8;line-height:1.5}
+  .steps3{display:flex;flex-direction:column;gap:10px}
+  .s3{display:flex;gap:12px;align-items:center;font-size:14px}
+  .s3 .n{flex:none;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));
+    display:grid;place-items:center;font-weight:800;font-size:14px}
+  .wQuote{text-align:center;font-size:17px;font-weight:700;line-height:1.4;margin:22px 6px;color:var(--txt)}
+  .wQuote span{color:var(--gold)}
+  .wStart{width:100%;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff;font-weight:800;font-size:16px;padding:16px;border-radius:14px;cursor:pointer;box-shadow:0 8px 24px rgba(79,157,255,.35)}
+  .wBadge{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:-16px 0 26px}
+  .wBadge span{background:rgba(63,202,161,.1);color:var(--green);border:1px solid rgba(63,202,161,.3);
+    border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600}
+  .wCredit{text-align:center;color:var(--muted);font-size:12.5px;margin-top:20px;line-height:1.7}
+  .wCredit b{color:var(--txt)}
+  .wHero{background:linear-gradient(135deg,rgba(79,157,255,.2),rgba(124,92,255,.2));
+    border:1.5px solid var(--accent);border-radius:var(--r);padding:20px 18px;margin:0 0 24px;text-align:center;
+    box-shadow:0 8px 30px rgba(79,157,255,.18)}
+  .wHero .k{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-weight:800;margin-bottom:10px}
+  .wHero p{margin:0;font-size:18px;line-height:1.5;font-weight:700;color:#fff}
+  .wHero p b{color:var(--gold)}
+  /* toolbox por problema */
+  .catGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .catCard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;cursor:pointer;transition:.15s}
+  .catCard:active{transform:scale(.97);border-color:var(--accent)}
+  .catCard .ce{font-size:26px}
+  .catCard b{display:block;font-size:14px;margin-top:8px;line-height:1.25}
+  .catCard small{color:var(--muted);font-size:11.5px;display:block;margin-top:4px;line-height:1.35}
+  .catCard .cnt{margin-top:9px;font-size:11px;color:var(--accent);font-weight:700}
+  .backBtn{background:none;border:none;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;padding:2px 0;margin-bottom:2px}
+  textarea.noteArea{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px;font-size:14px;font-family:inherit;resize:vertical}
+</style>
+</head>
+<body>
+
+<!-- ===== BIENVENIDA / PRESENTACIÓN ===== -->
+<div class="welcome" id="welcome">
+  <div class="inner">
+    <div class="logo">El Negociador</div>
+    <h2>Aprendé a <span>dominar tu propia mente</span></h2>
+    <p class="tag">Tu entrenador diario, en 5 a 15 minutos por día.</p>
+
+    <div class="wHero">
+      <div class="k">Para qué sirve</div>
+      <p>Te ayuda a estar más <b>tranquilo</b>, más <b>concentrado</b> y más <b>dueño de vos mismo</b> — con ejercicios cortos de 2 a 5 minutos por día.</p>
+    </div>
+
+    <div class="wBadge"><span>🔬 Basado en neurociencia</span><span>⏱️ Ejercicios de 2 a 5 min</span></div>
+
+    <div class="wBlock">
+      <h3>🧠 ¿Por qué funciona?</h3>
+      <p>Tu cerebro está programado para una sola cosa: gastar la menor energía posible y mantenerte a salvo. <b>No</b> para hacerte feliz ni exitoso. Por eso a veces te traiciona: te pone nervioso, te hace explotar, te tira siempre para lo cómodo. Esta app te enseña a "negociar" con él usando ejercicios cortos y simples, probados por la ciencia, para que tu cerebro juegue a tu favor.</p>
+    </div>
+
+    <div class="wBlock">
+      <h3>🎯 Qué te promete</h3>
+      <ul class="promise">
+        <li><span class="pi">😌</span><div><b>Calma bajo presión:</b> dejás de explotar o bloquearte cuando algo se complica.</div></li>
+        <li><span class="pi">🔍</span><div><b>Foco y claridad:</b> pensás mejor y tomás decisiones más inteligentes.</div></li>
+        <li><span class="pi">💪</span><div><b>Constancia sin sufrir:</b> avanzás sin depender de la fuerza de voluntad.</div></li>
+        <li><span class="pi">❤️</span><div><b>Mejores relaciones:</b> manejás los nervios, los conflictos y las discusiones.</div></li>
+      </ul>
+    </div>
+
+    <div class="wBlock">
+      <h3>📅 Qué podés esperar</h3>
+      <div class="timeline">
+        <div class="tl"><div><b>DESDE EL DÍA 1</b><p>Ya te sentís un poco más en control y menos acelerado.</p></div></div>
+        <div class="tl"><div><b>SEMANA 1 a 2</b><p>La gente alrededor empieza a notarte "más tranquilo" y enfocado.</p></div></div>
+        <div class="tl"><div><b>MES 1</b><p>Resiliencia real: donde otros se desesperan, vos mantenés la calma.</p></div></div>
+      </div>
+    </div>
+
+    <div class="wBlock">
+      <h3>⚙️ Cómo se usa (súper simple)</h3>
+      <div class="steps3">
+        <div class="s3"><div class="n">1</div><div><b>A la mañana:</b> preparás tu cerebro (postura + respiración).</div></div>
+        <div class="s3"><div class="n">2</div><div><b>Durante el día:</b> usás las herramientas según lo que necesites.</div></div>
+        <div class="s3"><div class="n">3</div><div><b>A la noche:</b> cerrás el día y celebrás tu avance, aunque sea chico.</div></div>
+      </div>
+    </div>
+
+    <p class="wQuote">No se trata de volverte <span>perfecto</span>.<br>Se trata de volverte <span>consciente</span>. Y eso, hoy, es un superpoder.</p>
+
+    <button class="wStart" onclick="hideWelcome()">Empezar 🚀</button>
+
+    <p class="wCredit">Creado por <b>Nicolás Elorrieta</b><br>Basado en principios de neurociencia y psicología del comportamiento.</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div class="brand">El <span>Negociador</span></div>
+    <div class="topRight">
+      <button class="info" onclick="showWelcome()">ℹ️ Qué es</button>
+      <div class="date" id="date"></div>
+    </div>
+  </header>
+
+  <!-- ===== HOY ===== -->
+  <section class="screen active" id="hoy">
+    <h1 id="greet">Buen día</h1>
+    <p class="sub">Plan Básico · El reset biológico de hoy</p>
+
+    <div class="stateBox">
+      <h3>¿Cómo está tu cerebro ahora?</h3>
+      <p>Tu cerebro evalúa todo como amenaza o no-amenaza. Decímelo y adapto el día.</p>
+      <div class="stateBtns">
+        <button class="calm" onclick="setState('calm')">😌 No-amenaza</button>
+        <button class="threat" onclick="setState('threat')">⚡ Amenaza / tenso</button>
+      </div>
+      <div class="stateMsg" id="stateMsg"></div>
+    </div>
+
+    <div id="cards"></div>
+
+    <div class="celebrate" id="celebrate" style="display:none">
+      <div class="big">🎉</div>
+      <h3 id="celTitle">¡Cerraste el día!</h3>
+      <p id="celMsg"></p>
+    </div>
+  </section>
+
+  <!-- ===== SOS ===== -->
+  <section class="screen" id="sos">
+    <h1>SOS</h1>
+    <p class="sub">Conflicto, ansiedad o discusión → bajá en 90 segundos</p>
+    <p class="sosIntro">Cuando sentís la mandíbula apretada o querés explotar, tu sangre se fue a las extremidades. Primero respirá para devolverla a tu corteza. Después, subite al balcón.</p>
+
+    <div class="card open">
+      <div class="cardHead"><div class="ico">🌬️</div><div class="t"><b>Suspiro fisiológico</b><small>Stanford 2023 · el calmante más rápido</small></div></div>
+      <div class="body" style="display:block">
+        <div class="intro">Es la forma más rápida que existe de calmarte —más que cualquier otra respiración, según un estudio de Stanford (2023). Hacés <b>dos inhalaciones seguidas por la nariz</b> (la segunda corta, "rellena" los pulmones) y después una <b>exhalación larga por la boca</b>. Esa exhalación larga activa el nervio que frena tu corazón y baja el estrés en segundos. Seguí el orbe y dejate llevar; 5 ciclos alcanzan.</div>
+        <div class="orb-wrap"><div class="orb" id="sosOrb">Listo</div></div>
+        <p class="row" style="text-align:center;color:var(--muted);font-size:13px" id="sosCue">Doble inhalación por nariz + exhalación larga por boca.</p>
+        <button class="timer" style="width:100%;border:none;background:var(--accent);color:#fff;font-weight:700;padding:12px;border-radius:12px;cursor:pointer" id="sosBtn" onclick="sosBreath()">Empezar (5 ciclos)</button>
+      </div>
+    </div>
+
+    <div class="balcony">
+      <h3>🎈 Subite al balcón</h3>
+      <div class="intro">Cuando estás metido adentro de una discusión, la emoción te tapa y no ves con claridad. "Subirte al balcón" es imaginar que mirás la escena desde arriba, como un espectador ajeno. Eso baja la intensidad emocional y te devuelve la cabeza fría. El último paso es clave: reescribir lo que querés decir empezando por <b>"Yo..."</b> en vez de <b>"Vos..."</b>. El "Vos" acusa y hace explotar al otro; el "Yo" cuenta cómo te sentís y genera empatía.</div>
+      <label>1. ¿Qué está pasando? (en 4ª persona, como un observador)</label>
+      <textarea id="bal1" rows="2" placeholder="Veo a dos personas discutiendo sobre..."></textarea>
+      <label>2. ¿Qué necesidad mía está amenazada? (competencia / autonomía / afinidad)</label>
+      <input id="bal2" placeholder="Siento que cuestionan mi...">
+      <label>3. Reescribilo como mensaje-YO (sin 'vos hiciste')</label>
+      <textarea id="bal3" rows="2" placeholder="Yo siento... / Yo noto que..."></textarea>
+      <button class="btnDone" onclick="saveBalcony()" style="margin-top:14px">Guardar y respirar</button>
+      <div class="yi" id="yiMsg">Bien. Ahora esperá 6 segundos antes de responder. La emoción ya bajó.</div>
+    </div>
+  </section>
+
+  <!-- ===== TARDE ===== -->
+  <section class="screen" id="tarde">
+    <h1>Tarde</h1>
+    <p class="sub">El momento crítico · acá se cae el 80%</p>
+    <p class="sosIntro">A la tarde tu cerebro consciente está cansado y pierde fuerza para frenar al impulso. Por eso primero recargás la biología, y recién después ejecutás lo difícil.</p>
+
+    <div id="tardeCards"></div>
+
+    <div class="card">
+      <div class="cardHead" onclick="this.parentElement.classList.toggle('open')">
+        <div class="ico">✅</div><div class="t"><b>Checklist Go / No-Go</b><small>parametrizá una tarea compleja</small></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="body">
+        <div class="intro">Cuando algo es nuevo o complicado, tu cabeza se sobrecarga y pasa una de dos: lo hacés mal, o lo evitás. La solución es sacarlo todo de tu memoria y ponerlo en una lista de pasos <b>"hecho / no hecho"</b>. Así tu cerebro deja de gastar energía tratando de recordar y solo ejecuta, uno por uno. No es burocracia: es exactamente lo que usan los pilotos de avión para no olvidarse un paso y estrellarse. Escribí tu tarea y sus pasos, y la app te arma el checklist.</div>
+        <div class="row"><div class="lbl">Por qué funciona (la ciencia)</div><p>Los checklists nacieron tras un accidente de Boeing en 1935: hasta el mejor piloto comete errores por sobrecarga. Bajan los fallos drásticamente porque liberan a tu mente de recordar.</p></div>
+        <div class="row"><span class="benefit">Menos errores · cero parálisis por saturación</span></div>
+        <div class="row"><div class="lbl">¿Qué tarea vas a chequear?</div>
+          <input id="ckTask" placeholder="Ej: preparar la reunión / publicar la campaña" oninput="saveCk()">
+        </div>
+        <div class="row"><div class="lbl">Pasos (uno por línea)</div>
+          <textarea id="ckSteps" rows="4" placeholder="Paso 1&#10;Paso 2&#10;Paso 3" oninput="saveCk()"></textarea>
+          <button class="btnDone" onclick="buildCk()" style="margin-top:10px">Generar checklist</button>
+        </div>
+        <ul class="steps" id="ckList"></ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="cardHead" onclick="this.parentElement.classList.toggle('open')">
+        <div class="ico">✂️</div><div class="t"><b>Fragmentá lo que te frena</b><small>regla del 1% · de menos a más</small></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="body">
+        <div class="intro">Casi nunca abandonás algo porque no puedas hacerlo —lo abandonás porque es <b>tan grande</b> que da pereza solo empezar. Tu cerebro ve la montaña y dice "uf, mejor después". La salida es ridícula de simple: partila hasta que el primer paso te lleve 5 minutos. No tenés que "ordenar toda la contabilidad"; tenés que "abrir la planilla y mirar una fila". Eso es todo. Una vez que arrancás, seguir es fácil.</div>
+        <div class="row"><div class="lbl">Por qué funciona (la ciencia)</div><p>Una tarea enorme genera displacer y tu cerebro la rechaza para ahorrar energía. Al achicarla, desaparece el displacer y aparece el placer de avanzar (regla del 1%: de menos a más).</p></div>
+        <div class="row"><span class="benefit">Empezás · y empezar es el 90% del hábito</span></div>
+        <div class="row"><div class="lbl">La tarea que te abruma</div>
+          <input id="fragBig" placeholder="Ej: ordenar toda la contabilidad" oninput="saveFrag()">
+          <div class="lbl" style="margin-top:12px">El primer micro-paso (de 5 minutos)</div>
+          <input id="fragSmall" placeholder="Ej: abrir la planilla y mirar una fila" oninput="saveFrag()">
+        </div>
+        <button class="btnDone" onclick="toast('✂️ Hacé SOLO ese micro-paso. Nada más.')">Comprometerme al micro-paso</button>
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-top:4px">
+      <p style="margin:0;font-size:13px;color:var(--muted)">⚡ ¿Conflicto o discusión ahora? Usá el botón <b style="color:var(--red)">SOS</b> abajo a la derecha: respiración + balcón + mensaje-YO.</p>
+    </div>
+  </section>
+
+  <!-- ===== NOCHE ===== -->
+  <section class="screen night" id="noche">
+    <h1>Cierre del día</h1>
+    <p class="sub">5 minutos para tener consciencia y celebrar el "dos"</p>
+
+    <div class="card open">
+      <div class="cardHead"><div class="ico">🧠</div><div class="t"><b>Informe metacognitivo</b><small>Entender el proceso desarma la frustración</small></div></div>
+      <div class="body" style="display:block">
+        <div class="intro">Dos minutos para mirar tu día desde afuera. No es escribir un diario largo: es notar qué emoción te dominó y qué la disparó. Cuando entendés <b>por qué</b> reaccionaste así, dejás de pelearte con vos mismo y empezás a tener el control. Lo de las palabras tiene truco: las palabras negativas, repetidas, le meten "carga" tóxica a tu cuerpo (un estudio siguió a cientos de monjas y predijo su salud según cuántas palabras positivas usaban). Por eso la app mide el tono de lo que escribís.</div>
+        <div class="row"><div class="lbl">¿Qué emoción dominó hoy?</div>
+          <div class="moodRow" id="moodRow">
+            <button onclick="pickMood(this,'Calma')">Calma</button>
+            <button onclick="pickMood(this,'Ansiedad')">Ansiedad</button>
+            <button onclick="pickMood(this,'Foco')">Foco</button>
+            <button onclick="pickMood(this,'Ira')">Ira</button>
+            <button onclick="pickMood(this,'Apatía')">Apatía</button>
+            <button onclick="pickMood(this,'Satisfacción')">Satisfacción</button>
+          </div>
+        </div>
+        <div class="row"><div class="lbl">¿Qué la disparó? (regla / hábito detrás)</div>
+          <textarea id="nightWhy" rows="2" placeholder="Se disparó cuando..."></textarea>
+        </div>
+        <div class="row"><div class="lbl">Carga de palabras (las monjas de Notre Dame)</div>
+          <input id="nightWords" placeholder="Escribí 1 frase sobre tu día...">
+          <p style="font-size:12px;color:var(--muted);margin:6px 0 0" id="wordScore"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="celebrate">
+      <div class="big">🥉</div>
+      <h3>Celebrá tu "dos" de hoy</h3>
+      <p>El cerebro aprende donde hay fiesta. No festejes el 10 perfecto: festejá haber aparecido.</p>
+      <input id="nightWin" placeholder="Hoy, aunque sea un dos, logré..." style="margin-top:12px">
+      <button class="btnDone" onclick="closeNight()" style="margin-top:14px">Cerrar el día 🎊</button>
+    </div>
+  </section>
+
+  <!-- ===== RESOLVER (caja de herramientas) ===== -->
+  <section class="screen" id="resolver">
+    <div id="catHome">
+      <h1>¿Qué querés resolver hoy?</h1>
+      <p class="sub">Elegí un tema y abrí tu caja de herramientas</p>
+      <div class="catGrid" id="catGrid"></div>
+    </div>
+    <div id="toolView" style="display:none">
+      <button class="backBtn" onclick="closeCategory()">← Volver a los temas</button>
+      <h1 id="catTitle"></h1>
+      <p class="sub" id="catDesc"></p>
+      <div id="toolCards"></div>
+    </div>
+  </section>
+
+  <!-- ===== PROGRESO ===== -->
+  <section class="screen" id="progreso">
+    <h1>Tu progreso</h1>
+    <p class="sub">El interés compuesto del 1% diario</p>
+    <div class="stat">
+      <div class="box"><b id="streak">0</b><small>días de racha</small></div>
+      <div class="box"><b id="total">0</b><small>días completos</small></div>
+      <div class="box"><b id="pct">0%</b><small>mejora acumulada</small></div>
+    </div>
+    <div class="compound">
+      <h3>Regla del 1%</h3>
+      <p>Cada día consolidado te mejora un 1%. No es lineal — se compone.</p>
+      <canvas id="chart"></canvas>
+    </div>
+    <div class="log">
+      <h3>TUS "DOSES" CELEBRADOS</h3>
+      <div id="wins"></div>
+    </div>
+  </section>
+</div>
+
+<button class="sosFab" onclick="go('sos')">SOS</button>
+
+<nav>
+  <button class="active" data-s="hoy" onclick="go('hoy')"><span class="ni">☀️</span>Mañana</button>
+  <button data-s="tarde" onclick="go('tarde')"><span class="ni">🌤️</span>Tarde</button>
+  <button data-s="noche" onclick="go('noche')"><span class="ni">🌙</span>Noche</button>
+  <button data-s="resolver" onclick="go('resolver')"><span class="ni">🧰</span>Resolver</button>
+  <button data-s="progreso" onclick="go('progreso')"><span class="ni">📈</span>Progreso</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- data ---------- */
+const todayKey = new Date().toISOString().slice(0,10);
+const DB = {
+  load(){ try{return JSON.parse(localStorage.getItem('negociador')||'{}')}catch(e){return{}} },
+  save(d){ localStorage.setItem('negociador',JSON.stringify(d)) }
+};
+let db = DB.load();
+db.days = db.days||{};
+db.wins = db.wins||[];
+db.tested = db.tested||{};
+db.notes = db.notes||{};
+let today = db.days[todayKey] = db.days[todayKey] || {state:null,cards:{},night:false};
+function persist(){ db.days[todayKey]=today; DB.save(db) }
+
+/* ---------- cards (Plan Básico) ---------- */
+const CARDS = [
+  { id:'postura', ico:'🦁', title:'Postura de poder', tag:'2 min · antes de cualquier reto',
+    intro:'Tu cuerpo le habla a tu cerebro, no solo al revés. Cuando te parás "grande" —pecho abierto, hombros atrás, mentón arriba— en apenas 2 minutos tu cuerpo fabrica más <b>testosterona</b> (la hormona de la seguridad y la confianza) y menos <b>cortisol</b> (la del estrés). Es el mismo gesto instintivo que hace un atleta cuando cruza la meta ganando. Usalo justo antes de algo que te ponga nervioso: una reunión, una llamada difícil, una decisión importante.',
+    why:'Estudios de Harvard (Amy Cuddy) y con primates (Sapolsky) mostraron que 2 minutos en esta postura ya cambian tus niveles hormonales medibles en sangre.',
+    benefit:'+ Testosterona (confianza) · − Cortisol (ansiedad)',
+    steps:['Pies al ancho de los hombros','Caderas hacia adelante','Hombros echados hacia atrás','Mentón un poco arriba','Codos separados del cuerpo (más separados = más fuerza)'],
+    timer:120 },
+  { id:'respira', ico:'🫁', title:'Respiración diafragmática', tag:'5 min · destrabá tu cabeza',
+    intro:'La mayoría respira con el pecho, corto y rápido —y eso, sin que te des cuenta, le avisa a tu cerebro que hay peligro y te deja en modo "reacción". Respirar inflando la <b>panza</b> hace lo contrario: le dice "estás a salvo", y entonces tu cerebro devuelve la sangre a la parte que piensa con claridad (la que se apaga cuando estás estresado). Es, literalmente, el botón de apagado del estrés. Con 5 minutos alcanza, y es la base para poder concentrarte en serio.',
+    why:'Respirar con el diafragma activa el sistema parasimpático (el del "descanso"). Tu cerebro necesita ~1,5 L de sangre para razonar bien; el estrés se la roba, y esto se la devuelve.',
+    benefit:'Vuelve la claridad para pensar y decidir · baja pulsaciones',
+    steps:['Sentate con la espalda recta','Inhalá inflando el VIENTRE, no el pecho','Exhalá lento, más largo que la inhalación','Seguí el orbe de la pantalla: crece = inhalá, baja = exhalá'],
+    breath:true, timer:300 },
+  { id:'tareas', ico:'🎯', title:'Tareas abiertas del día', tag:'2 min · enfocá lo que querés ver',
+    intro:'Tu cerebro ignora el <b>90%</b> de lo que tenés alrededor para ahorrar energía: solo te muestra lo que marcaste como importante. ¿Te pasó que comprás un auto y de golpe ves ese mismo modelo en todos lados? No aparecieron más autos: tu cerebro empezó a mostrártelos porque ahora le importan. Lo mismo funciona con oportunidades. Si cada mañana le decís qué querés encontrar hoy, tu cerebro lo agrega al "filtro" y empieza a detectarlo solo.',
+    why:'El cerebro filtra los estímulos según tus hábitos, tu capacidad y tus "tareas abiertas". Definir una tarea abierta reprograma ese filtro a tu favor.',
+    benefit:'Tu "intuición" mejora · ves oportunidades antes invisibles',
+    steps:[],
+    input:true },
+  { id:'luz', ico:'🌅', title:'Luz + intención', tag:'extra · ancla tu día',
+    intro:'Dos cosas chiquitas con efecto grande. <b>La luz natural temprano</b> le pone la hora a tu reloj interno: vas a dormir y rendir mejor el resto del día. Y una <b>intención</b> del tipo "si pasa X, entonces hago Y" deja la decisión tomada de antemano, así no tenés que gastar fuerza de voluntad en el momento (ejemplo: "si me ofrecen postre, pido un café"). Es como dejarte instrucciones a vos mismo para cuando estés cansado.',
+    why:'La luz matinal regula tu ritmo de cortisol (Huberman). Las "intenciones de implementación" automatizan la conducta sin esfuerzo consciente.',
+    benefit:'Mejor energía y sueño · menos dependencia de la voluntad',
+    steps:['Exponete a luz natural unos minutos (ventana o afuera)','Escribí 1 intención tipo: "Si pasa ___, entonces hago ___"'],
+    input2:true }
+];
+
+/* ---------- render ---------- */
+function renderCards(){
+  const c = document.getElementById('cards'); c.innerHTML='';
+  CARDS.forEach(card=>{
+    const st = today.cards[card.id]||{done:false,steps:{},val:''};
+    const el = document.createElement('div');
+    el.className='card'+(st.done?' done':'');
+    el.innerHTML = `
+      <div class="cardHead" onclick="toggleCard('${card.id}',event)">
+        <div class="ico">${card.ico}</div>
+        <div class="t"><b>${card.title}</b><small>${card.tag}</small></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="body">
+        <div class="intro">${card.intro}</div>
+        <div class="row"><div class="lbl">Por qué funciona (la ciencia)</div><p>${card.why}</p></div>
+        <div class="row"><span class="benefit">${card.benefit}</span></div>
+        ${card.steps.length?`<div class="row"><div class="lbl">Cómo se hace</div><ul class="steps">${
+          card.steps.map((s,i)=>`<li class="${st.steps[i]?'on':''}" onclick="stepTog('${card.id}',${i})"><span class="b">✓</span>${s}</li>`).join('')
+        }</ul></div>`:''}
+        ${card.breath?`<div class="orb-wrap"><div class="orb" id="orb_${card.id}">Inhalá</div></div>`:''}
+        ${card.timer?`<div class="timer"><div class="num" id="tn_${card.id}">${fmt(card.timer)}</div><button onclick="startTimer('${card.id}',${card.timer},${!!card.breath})">Iniciar</button><div class="hint">${card.breath?'Seguí el orbe: crece=inhalá, baja=exhalá':'2 minutos cambian tu hormona'}</div></div>`:''}
+        ${card.input?`<div class="row"><div class="lbl">Cómo</div><input class="oneOff" id="in_${card.id}" placeholder="Hoy quiero detectar: una oportunidad de..." value="${st.val||''}" oninput="saveVal('${card.id}',this.value)" style="width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px;font-size:14px"></div>`:''}
+        ${card.input2?`<div class="row"><input id="in_${card.id}" placeholder='Si pasa ____, entonces hago ____' value="${st.val||''}" oninput="saveVal('${card.id}',this.value)" style="width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px;font-size:14px;margin-top:6px"></div>`:''}
+        <button class="btnDone ${st.done?'is-done':''}" onclick="markDone('${card.id}')">${st.done?'✓ Hecho — buen dos':'Marcar como hecho'}</button>
+      </div>`;
+    c.appendChild(el);
+  });
+  checkCelebrate();
+}
+
+function fmt(s){const m=Math.floor(s/60),x=s%60;return m+':'+String(x).padStart(2,'0')}
+function toggleCard(id,e){ if(e.target.closest('.btnDone'))return; e.currentTarget.parentElement.classList.toggle('open') }
+function stepTog(id,i){ const st=today.cards[id]=today.cards[id]||{done:false,steps:{},val:''}; st.steps[i]=!st.steps[i]; persist(); softRender(id) }
+function saveVal(id,v){ const st=today.cards[id]=today.cards[id]||{done:false,steps:{},val:''}; st.val=v; persist() }
+function softRender(id){
+  // re-render just step list states without losing open state / focus
+  CARDS.forEach(card=>{ if(card.id!==id)return;
+    const st=today.cards[id]; const lis=document.querySelectorAll(`#cards .card`);
+  });
+  renderKeepOpen();
+}
+let openSet=new Set();
+function renderKeepOpen(){
+  document.querySelectorAll('#cards .card.open').forEach(c=>{});
+  const opened=[...document.querySelectorAll('#cards .card')].map(c=>c.classList.contains('open'));
+  renderCards();
+  [...document.querySelectorAll('#cards .card')].forEach((c,i)=>{ if(opened[i])c.classList.add('open') });
+}
+
+function markDone(id){
+  const st=today.cards[id]=today.cards[id]||{done:false,steps:{},val:''};
+  st.done=!st.done; persist();
+  if(st.done)toast('🥉 Buen dos. Tu cerebro lo registra.');
+  renderKeepOpen();
+}
+
+/* ---------- timer + breathing ---------- */
+let timers={};
+function startTimer(id,secs,breath){
+  if(timers[id]){clearInterval(timers[id].iv);clearInterval(timers[id].bv);timers[id]=null;
+    document.getElementById('tn_'+id).textContent=fmt(secs);return}
+  let left=secs; const num=document.getElementById('tn_'+id);
+  timers[id]={};
+  timers[id].iv=setInterval(()=>{left--;num.textContent=fmt(left);
+    if(left<=0){clearInterval(timers[id].iv);clearInterval(timers[id].bv);timers[id]=null;
+      num.textContent='✓ Listo';toast('Hecho. Tu cerebro ya cambió.');}
+  },1000);
+  if(breath){
+    const orb=document.getElementById('orb_'+id);let phase=0;
+    const cyc=()=>{ if(phase%2===0){orb.className='orb in';orb.textContent='Inhalá (vientre)'} else {orb.className='orb out';orb.textContent='Exhalá lento'} phase++ };
+    cyc(); timers[id].bv=setInterval(cyc,5000);
+  }
+}
+
+/* ---------- TARDE ---------- */
+const TARDE_CARDS = [
+  { id:'recarga', ico:'⚡', title:'Recarga de tarde', tag:'1 min · recargá el autocontrol',
+    intro:'A media tarde tu "músculo" del autocontrol está agotado —por eso a esa hora es cuando discutís de más, picoteás, o mandás el mensaje que después lamentás. No es falta de carácter: tu cerebro consciente, que es el que frena los impulsos, se quedó sin energía. <b>60 segundos</b> de postura + respiración recargan ese freno. Pensalo como un pit-stop: parás, cargás, y seguís entero.',
+    why:'Inhibir impulsos es lo que más energía te consume en el día. Al caer esa energía, el impulso gana. Postura + respiración resetean cortisol y reactivan el control.',
+    benefit:'Vuelve la capacidad de frenar · menos arrepentimientos',
+    steps:['Postura de poder 30 seg (mentón arriba, codos abiertos)','3 suspiros: doble inhalación por nariz + exhalación larga por boca'],
+    timer:60 }
+];
+function renderTarde(){
+  const c=document.getElementById('tardeCards');if(!c)return;c.innerHTML='';
+  today.tarde=today.tarde||{cards:{},ck:{task:'',steps:'',done:{}},frag:{big:'',small:''}};
+  TARDE_CARDS.forEach(card=>{
+    const st=today.tarde.cards[card.id]||{done:false,steps:{}};
+    const el=document.createElement('div');el.className='card'+(st.done?' done':'');
+    el.innerHTML=`
+      <div class="cardHead" onclick="toggleCard('t_${card.id}',event)">
+        <div class="ico">${card.ico}</div>
+        <div class="t"><b>${card.title}</b><small>${card.tag}</small></div>
+        <div class="chk">✓</div>
+      </div>
+      <div class="body">
+        <div class="intro">${card.intro}</div>
+        <div class="row"><div class="lbl">Por qué funciona (la ciencia)</div><p>${card.why}</p></div>
+        <div class="row"><span class="benefit">${card.benefit}</span></div>
+        <div class="row"><div class="lbl">Cómo se hace</div><ul class="steps">${card.steps.map((s,i)=>`<li class="${st.steps[i]?'on':''}" onclick="tStepTog('${card.id}',${i})"><span class="b">✓</span>${s}</li>`).join('')}</ul></div>
+        <div class="timer"><div class="num" id="tn_t${card.id}">${fmt(card.timer)}</div><button onclick="startTimer('t${card.id}',${card.timer},false)">Iniciar</button><div class="hint">60 segundos cambian tu hormona</div></div>
+        <button class="btnDone ${st.done?'is-done':''}" onclick="tMarkDone('${card.id}')">${st.done?'✓ Recargado':'Marcar como hecho'}</button>
+      </div>`;
+    c.appendChild(el);
+  });
+  // restore checklist + frag inputs
+  document.getElementById('ckTask').value=today.tarde.ck.task||'';
+  document.getElementById('ckSteps').value=today.tarde.ck.steps||'';
+  document.getElementById('fragBig').value=today.tarde.frag.big||'';
+  document.getElementById('fragSmall').value=today.tarde.frag.small||'';
+  buildCk();
+}
+function tStepTog(id,i){const st=today.tarde.cards[id]=today.tarde.cards[id]||{done:false,steps:{}};st.steps[i]=!st.steps[i];persist();renderTardeKeep()}
+function tMarkDone(id){const st=today.tarde.cards[id]=today.tarde.cards[id]||{done:false,steps:{}};st.done=!st.done;persist();if(st.done)toast('⚡ Recargado. Ahora sí, lo difícil.');renderTardeKeep()}
+function renderTardeKeep(){const op=[...document.querySelectorAll('#tarde .card')].map(c=>c.classList.contains('open'));renderTarde();[...document.querySelectorAll('#tarde .card')].forEach((c,i)=>{if(op[i])c.classList.add('open')})}
+function saveCk(){today.tarde=today.tarde||{cards:{},ck:{task:'',steps:'',done:{}},frag:{big:'',small:''}};today.tarde.ck.task=val('ckTask');today.tarde.ck.steps=val('ckSteps');persist()}
+function saveFrag(){today.tarde=today.tarde||{cards:{},ck:{task:'',steps:'',done:{}},frag:{big:'',small:''}};today.tarde.frag.big=val('fragBig');today.tarde.frag.small=val('fragSmall');persist()}
+function buildCk(){
+  const list=document.getElementById('ckList');if(!list)return;
+  const steps=(today.tarde.ck.steps||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  today.tarde.ck.done=today.tarde.ck.done||{};
+  list.innerHTML=steps.map((s,i)=>`<li class="${today.tarde.ck.done[i]?'on':''}" onclick="ckTog(${i})"><span class="b">✓</span>${today.tarde.ck.done[i]?'GO · ':'NO-GO · '}${s}</li>`).join('');
+}
+function ckTog(i){today.tarde.ck.done[i]=!today.tarde.ck.done[i];persist();buildCk()}
+
+/* ---------- SOS physiological sigh ---------- */
+function sosBreath(){
+  const orb=document.getElementById('sosOrb'),cue=document.getElementById('sosCue'),btn=document.getElementById('sosBtn');
+  btn.disabled=true;let cycle=0;
+  const seq=[['Inhalá por nariz',1500,'in'],['…segunda inhalación corta',900,'in'],['Exhalá largo por boca',5000,'out']];
+  function run(){ let i=0;
+    function step(){ if(i>=seq.length){cycle++; if(cycle>=5){orb.className='orb';orb.textContent='✓';cue.textContent='Listo. La emoción bajó. Ahora subite al balcón.';btn.disabled=false;btn.textContent='Repetir';return} return run()}
+      const[t,d,c]=seq[i];orb.className='orb '+c;orb.textContent='';cue.textContent=t;i++;setTimeout(step,d) }
+    step();
+  } run();
+}
+function saveBalcony(){
+  document.getElementById('yiMsg').style.display='block';
+  toast('🎈 Guardado. Respirá 6 segundos antes de responder.');
+}
+
+/* ---------- state ---------- */
+function setState(s){
+  today.state=s;persist();
+  document.querySelectorAll('.stateBtns button').forEach(b=>b.classList.remove('sel'));
+  document.querySelector('.stateBtns .'+s).classList.add('sel');
+  const m=document.getElementById('stateMsg');m.style.display='block';
+  m.innerHTML = s==='threat'
+    ? '⚡ Día de amenaza. Hoy NO te exijo. Solo lo biológico: <b>postura + respiración</b>. Con eso ya ganaste el día.'
+    : '😌 Buen estado. Aprovechá para sumar las tareas abiertas y la intención. Tu corteza está disponible.';
+}
+
+/* ---------- night ---------- */
+let nightMood='';
+function pickMood(b,m){document.querySelectorAll('#moodRow button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');nightMood=m}
+const POS=['bien','logr','gan','calm','foco','feliz','grac','orgull','avanc','mejor','tranquil','disfrut','aprend','fuerz','clar'];
+const NEG=['mal','no pud','fall','ansi','ira','enoj','triste','cans','frustr','miedo','odio','peor','nunca','imposible'];
+document.addEventListener('input',e=>{
+  if(e.target.id==='nightWords'){
+    const t=e.target.value.toLowerCase();let p=0,n=0;
+    POS.forEach(w=>{if(t.includes(w))p++});NEG.forEach(w=>{if(t.includes(w))n++});
+    const el=document.getElementById('wordScore');
+    if(!t){el.textContent='';return}
+    el.textContent = p>=n ? `🟢 Carga positiva (${p} vs ${n}). Eso baja tu carga alostática.`
+                          : `🔴 Carga negativa (${n} vs ${p}). Cuidado: las palabras enferman. Reescribila.`;
+  }
+});
+function closeNight(){
+  today.night={mood:nightMood,why:val('nightWhy'),words:val('nightWords'),win:val('nightWin')};
+  if(today.night.win){db.wins.unshift({d:todayKey,t:today.night.win});}
+  // mark day complete
+  today.complete=true;persist();DB.save(db);
+  toast('🎊 Día cerrado. Nos vemos mañana.');
+  go('progreso');
+}
+function val(id){return (document.getElementById(id)||{}).value||''}
+
+/* ---------- celebrate on Hoy ---------- */
+function checkCelebrate(){
+  const doneBio = (today.cards.postura&&today.cards.postura.done)&&(today.cards.respira&&today.cards.respira.done);
+  const cel=document.getElementById('celebrate');
+  if(doneBio){cel.style.display='block';
+    const all=CARDS.every(c=>today.cards[c.id]&&today.cards[c.id].done);
+    document.getElementById('celTitle').textContent=all?'¡Día completo! 🔥':'¡Base biológica lista! 🥉';
+    document.getElementById('celMsg').textContent=all?'Hiciste las 4. Festejalo — tu cerebro querrá repetir.':'Ya ganaste el día. Lo demás es bonus. Pasá a la Noche para cerrar.';
+  } else cel.style.display='none';
+}
+
+/* ---------- progress ---------- */
+function computeStats(){
+  const days=Object.keys(db.days).filter(k=>db.days[k].complete).sort();
+  const total=days.length;
+  // streak
+  let streak=0;let d=new Date();
+  for(;;){const k=d.toISOString().slice(0,10);if(db.days[k]&&db.days[k].complete){streak++;d.setDate(d.getDate()-1)}else break}
+  const pct=Math.round((Math.pow(1.01,total)-1)*100);
+  return {total,streak,pct};
+}
+function renderProgress(){
+  const s=computeStats();
+  document.getElementById('streak').textContent=s.streak;
+  document.getElementById('total').textContent=s.total;
+  document.getElementById('pct').textContent=s.pct+'%';
+  drawChart(s.total);
+  const w=document.getElementById('wins');w.innerHTML=db.wins.length?'':'<div class="logItem" style="color:var(--muted)">Todavía no celebraste ningún "dos". Cerrá un día en la pestaña Noche.</div>';
+  db.wins.slice(0,12).forEach(x=>{const e=document.createElement('div');e.className='logItem';e.innerHTML=`<b>${x.d}</b> · ${x.t}`;w.appendChild(e)});
+}
+function drawChart(total){
+  const cv=document.getElementById('chart');const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth,H=160;cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  const N=Math.max(30,total+5);const pad=8;
+  ctx.beginPath();ctx.strokeStyle='#4f9dff';ctx.lineWidth=2.5;
+  for(let i=0;i<=N;i++){const x=pad+(W-2*pad)*i/N;const y=H-pad-(H-2*pad)*(Math.pow(1.01,i)-1)/(Math.pow(1.01,N)-1);i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+  ctx.stroke();
+  // marker for today
+  const i=total;const x=pad+(W-2*pad)*i/N;const y=H-pad-(H-2*pad)*(Math.pow(1.01,i)-1)/(Math.pow(1.01,N)-1);
+  ctx.fillStyle='#ffcb45';ctx.beginPath();ctx.arc(x,y,5,0,7);ctx.fill();
+  ctx.fillStyle='#8b97a8';ctx.font='11px sans-serif';ctx.fillText('vos hoy',Math.min(x+6,W-50),Math.max(y-6,12));
+}
+
+/* ---------- EXTRAS (opcionales) ---------- */
+const EXTRAS=[
+  { id:'miedo', ico:'🎭', title:'Detector de miedo escondido', when:'En una discusión, negociación o cuando alguien reacciona agresivo',
+    intro:'Mucha gente que parece <b>enojada</b>, en realidad tiene <b>miedo</b> —la ira es el disfraz más común del miedo. Si aprendés a notarlo, dejás de pelear con la persona equivocada y podés bajar un conflicto en segundos, porque le hablás a lo que de verdad le pasa.',
+    why:'El miedo y la ira viven en la misma zona de activación del cerebro; gritar "tapa" la ansiedad. La mitad izquierda de la cara delata la emoción real (la controla el hemisferio derecho).',
+    steps:['Mirá la mitad IZQUIERDA de la cara de la persona','¿Cejas levantadas y juntas? ¿Aletas de la nariz dilatadas? → hay miedo','Si ves miedo bajo el enojo, no respondas al ataque: bajá el tono y dale seguridad'] },
+  { id:'sonrisa', ico:'😀', title:'La sonrisa que engaña al cerebro', when:'Antes de hablar en público, una llamada tensa o cuando estás de mal humor',
+    intro:'Tu cerebro lee tu propia cara para decidir cómo te sentís. Si activás los músculos de la <b>sonrisa real</b> (los de alrededor de los ojos), interpreta "estoy bien" y te baja la tensión —aunque al principio sea fingida. Es el famoso "fingilo hasta que sea verdad".',
+    why:'Por "marcador somático": el cuerpo manda señales al cerebro. Activar el músculo cigomático (sonrisa genuina) genera el estado emocional asociado.',
+    steps:['Poné un lápiz entre los dientes, de costado, 1-2 minutos','Eso activa sin querer el músculo de la sonrisa real','Sentí cómo cambia tu ánimo, y sacá el lápiz justo antes del momento'] },
+  { id:'difusion', ico:'🧊', title:'Despegarte de un pensamiento', when:'Cuando un pensamiento negativo te arrastra ("soy un inútil", "todo me sale mal")',
+    intro:'No sos tus pensamientos. Tu mente trabaja para tu cerebro (que quiere ahorrar energía), no para vos —por eso a veces te sabotea. El truco no es <b>discutir</b> con el pensamiento, sino tomar distancia y verlo pasar, como una nube. Así pierde el poder de arrastrarte.',
+    why:'Se llama "difusión cognitiva" (psicología de tercera generación, ACT): separar al observador del pensamiento observado le quita fuerza emocional.',
+    steps:['En vez de "soy un inútil", decite: "estoy teniendo el pensamiento de que soy un inútil"','Notá que VOS estás observando ese pensamiento → no sos él','Dejalo pasar; no hace falta creerle ni pelearlo'] },
+  { id:'placer', ico:'⚖️', title:'¿Placer o propósito?', when:'Cuando repetís algo que no te hace bien (redes, compras, buscar aprobación)',
+    intro:'Tu cerebro busca <b>placer</b>, no tu bien. Si hacés algo por un premio externo (likes, comprar, ganar para que te vean), se vuelve adictivo y nunca alcanza: cada vez necesitás más. Si lo hacés por un <b>propósito</b> tuyo, te sostiene sano. Este chequeo te dice cuál de los dos te está moviendo.',
+    why:'El placer "tangible" activa el mismo circuito que las adicciones y necesita dosis crecientes. El propósito y el placer "intangible" (ayudar, crear) no generan esa escalada.',
+    steps:['Preguntate: ¿esto lo hago por un placer que se ve/se cuenta, o por un propósito mío?','Si es solo placer tangible → tratalo como adicción y ponele un límite','Reemplazalo por un placer intangible: ayudar a alguien, crear algo, superarte'] },
+  { id:'expectativas', ico:'🛒', title:'Reset de expectativas', when:'Antes de un cumpleaños, un resultado, una reunión o una cita que sueles esperar con ansias',
+    intro:'Antes de cada situación, tu cerebro le pone una "nota esperada" y después compara. Si esperabas un 10 y recibís un 8, te frustrás —¡aunque el 8 sea bueno! Bajar la expectativa <b>a propósito y de antemano</b> hace que disfrutes lo que venga. Cuando no esperás nada, cualquier cosa buena se siente enorme.',
+    why:'El cerebro evalúa todo por comparación contra un punto de referencia que vos mismo inventaste. Ese punto, no la realidad, decide si algo te frustra o te alegra.',
+    steps:['Date cuenta de qué "nota" estás esperando de esto','Bajala a propósito a un punto realista (no esperes el 10)','Recordá: sin expectativas, cualquier cosa linda se vuelve un regalo'] },
+  { id:'mindfulness', ico:'🧘', title:'Mindfulness express (atención plena)', when:'Cuando estás disperso, acelerado o con la cabeza en mil cosas',
+    intro:'Mindfulness es simplemente <b>prestar atención plena al ahora</b>, sin juzgar. Tu mente vive saltando al pasado o al futuro, y eso genera ruido y ansiedad. Traerla al presente —a tu respiración, a lo que ves y escuchás— calma ese ruido. No necesitás incienso ni media hora: con 3 a 5 minutos cuando lo necesitás, alcanza. Un detalle clave: primero respirá tranquilo, porque no se puede prestar atención en calma si el cuerpo está en alerta.',
+    why:'La atención es el proceso más importante de tu mente: lo que atendés define tu realidad. Entrenarla reduce la ansiedad y te saca del "piloto automático". Por eso primero hay que activar el sistema de calma con la respiración.',
+    steps:['Sentate cómodo y hacé 3 respiraciones lentas inflando la panza','Llevá toda tu atención a cómo entra y sale el aire','Cuando tu mente se vaya (y se va a ir), traela de vuelta sin retarte','Nombrá 5 cosas que ves, 4 que escuchás, 3 que sentís en el cuerpo','Quedate 1-2 minutos solo observando, sin hacer nada más'] },
+  { id:'precompe', ico:'🏆', title:'Antes de competir o rendir', when:'Entrevista, presentación, reunión o venta importante · examen · y para los chicos: torneo de ajedrez o partido',
+    intro:'Sirve para cualquiera, a cualquier edad. Los nervios antes de un momento importante son <b>normales y buenos</b>: tu cuerpo se está cargando de energía, no avisándote que algo malo va a pasar. El problema es solo cuando esa energía te bloquea o te paraliza. Esta rutina de 2-3 minutos le dice a tu cerebro "estoy listo y tranquilo", para usar esos nervios a favor. Funciona igual antes de una entrevista, una presentación o una venta, que antes de un partido o un torneo —por eso es ideal también para hacerla junto a tus hijos.',
+    why:'La postura expansiva sube la confianza (testosterona) y baja el estrés (cortisol); la respiración apaga el modo alerta; y reinterpretar los nervios como "emoción/energía" en vez de "miedo" cambia cómo el cuerpo los vive.',
+    steps:['Ponete como un superhéroe 30 seg: parado, grande, pecho abierto, mentón arriba','Hacé 3 suspiros: dos veces aire por la nariz y soltarlo largo por la boca','Decite (o decile): "Estos nervios son mi energía para jugar mejor"','Elegí UNA sola cosa en la que enfocarte: la pelota, el tablero o la respiración','Sonreí un segundo antes de empezar: le avisa al cerebro que todo está bien'] },
+
+  /* 💰 DINERO */
+  { id:'dinero_historia', cat:'dinero', ico:'🧾', title:'Tu historia del dinero', when:'Cuando sentís que la plata no es para vos o repetís los mismos problemas con el dinero',
+    intro:'De chico aprendiste, sin darte cuenta, qué significa el dinero por lo que escuchabas en casa: "no somos ricos", "el dinero es sucio", "hay que sufrir para ganarlo". Esas frases hoy son <b>reglas invisibles</b> que manejan tus decisiones. El primer paso para cambiar tu economía es verlas.',
+    why:'Son "reglas" grabadas en tu modelo del mundo: cosas que asumís como verdad sin haberlas comprobado. Al hacerlas conscientes, dejan de funcionar en piloto automático.',
+    steps:['Escribí 3 frases sobre el dinero que escuchabas de chico','Marcá cuál todavía guía tus decisiones de hoy','Preguntate: es verdad, o es solo una regla heredada','Reescribila mejor (ej: "el dinero es una herramienta que sé manejar")'], note:true },
+  { id:'dinero_meta', cat:'dinero', ico:'🎯', title:'Tu meta financiera definida', when:'Cuando querés más dinero pero no avanzás (deseo difuso)',
+    intro:'Napoleón Hill decía que el deseo vago ("quiero más plata") no mueve a nadie. Lo que mueve es un <b>objetivo definido</b>: cuánto, para cuándo y qué vas a dar a cambio. Escribirlo y leerlo seguido enfoca tu cerebro.',
+    why:'Las metas específicas con plazo activan tu filtro perceptivo (el 10%): empezás a ver oportunidades que antes ignorabas, como cuando comprás un auto y lo ves en todos lados.',
+    steps:['Escribí la cantidad exacta y la fecha límite','Escribí qué vas a DAR a cambio (valor, servicio, trabajo)','Leelo en voz alta al despertar y antes de dormir','Visualizá 1 min cómo se siente tenerlo'], note:true },
+  { id:'dinero_abundancia', cat:'dinero', ico:'🌱', title:'De escasez a oportunidad', when:'Cuando solo ves lo que te falta y vivís en modo carencia',
+    intro:'Si tu cerebro busca "lo que falta", encuentra falta en todos lados. Si lo entrenás a buscar oportunidades, las empieza a ver. No es pensamiento mágico: es hacia dónde apuntás tu atención.',
+    why:'El filtro del 10%: solo percibís una fracción del entorno, definida por lo que tu cerebro cree importante. Lo que mirás repetido, lo ves más.',
+    steps:['Anotá 3 cosas que SÍ tenés hoy (salud, un contacto, una habilidad)','Anotá 1 oportunidad concreta a tu alcance que no estabas mirando','Definila como tarea abierta para que tu cerebro la rastree'] },
+
+  /* 🚫 CREENCIAS */
+  { id:'creencia_reescribir', cat:'creencias', ico:'✏️', title:'Detectar y reescribir una creencia', when:'Cuando una frase tipo "no sirvo para esto" te frena',
+    intro:'Una creencia limitante es una frase que repetís sobre vos como si fuera un hecho: "no sirvo", "siempre me va mal", "no soy de los que lo logran". No es la realidad: es una regla vieja. Y toda regla se puede reescribir.',
+    why:'Reestructuración cognitiva (terapia cognitiva) + difusión cognitiva: confrontar el pensamiento con evidencia y separarlo de tu identidad le quita poder.',
+    steps:['Escribí la creencia exacta que te limita','Buscá 2 pruebas reales de que NO siempre es cierta','Reescribila más justa: "estoy aprendiendo a..." en vez de "no sé"','Repetí la versión nueva cada vez que aparezca la vieja'], note:true },
+  { id:'afirmacion_identidad', cat:'creencias', ico:'🪞', title:'Afirmación de identidad (Yo soy)', when:'Para fortalecer quién querés ser',
+    intro:'Hill insistía en la <b>autosugestión</b>: repetirte quién querés ser hasta que tu cerebro lo asume. Funciona si la afirmación es creíble y la sentís, no si es un slogan vacío.',
+    why:'Tu diálogo interno moldea redes neuronales (neuroplasticidad). Las afirmaciones de identidad realistas funcionan mejor que las grandilocuentes, que el cerebro rechaza.',
+    steps:['Elegí UNA identidad a fortalecer ("soy una persona constante")','Escribila en presente y creíble','Decila mirándote al espejo 1 min, sintiéndola','Buscá hoy 1 acción chica que la confirme'] },
+
+  /* 🎯 METAS */
+  { id:'objetivo_definido', cat:'metas', ico:'🧭', title:'Tu objetivo principal definido', when:'Cuando no tenés claro hacia dónde vas',
+    intro:'Hill lo llamaba el "objetivo principal definido": una sola meta clara a la que le dedicás tu energía. Tener una, bien definida, ordena todas tus decisiones.',
+    why:'Un objetivo concreto reprograma tu filtro perceptivo y te da un "para qué", que es lo que sostiene la motivación cuando baja el placer.',
+    steps:['Escribí tu objetivo principal en una sola frase','Ponele fecha y un primer paso para esta semana','Releelo cada mañana','Chequeá: lo que hago hoy, me acerca o me aleja'], note:true },
+  { id:'visualizacion', cat:'metas', ico:'🎬', title:'Visualización (ensayo mental)', when:'Antes de un desafío importante o para fijar una meta',
+    intro:'El método Silva lo llama "pantalla mental": ver con detalle el resultado que querés, ya logrado. En el deporte de élite se llama ensayo mental y está comprobado que mejora el rendimiento real.',
+    why:'Imaginar una acción activa redes cerebrales casi iguales a ejecutarla (psicología del deporte). Sube la confianza y prepara al cuerpo.',
+    steps:['Primero relajate (usá "Relajación profunda")','Imaginá la escena del éxito con los 5 sentidos','Vivila en primera persona, sintiendo la emoción','Cerrá con una imagen nítida del momento de lograrlo'] },
+
+  /* 😴 SUEÑO */
+  { id:'sueno_programar', cat:'sueno', ico:'🌙', title:'Programar tu mente antes de dormir', when:'Cuando tenés un problema o decisión sin resolver',
+    intro:'Justo antes de dormir, tu mente entra en un estado muy receptivo. Silva aprovecha ese momento para "sembrar" una pregunta o intención. Tu cerebro la sigue trabajando mientras dormís y muchas veces amanecés con la respuesta.',
+    why:'Durante el sueño se consolida la memoria y se incuban soluciones. Plantear una intención antes de dormir aprovecha ese proceso real.',
+    steps:['En la cama, relajá la respiración','Planteá UNA pregunta clara ("mañana encuentro la forma de...")','No la fuerces; soltala y dejá que el sueño trabaje','Al despertar, anotá lo primero que aparezca'], note:true },
+  { id:'sueno_respiracion', cat:'sueno', ico:'😮‍💨', title:'Respiración para dormir', when:'Cuando no podés bajar las revoluciones en la cama',
+    intro:'La clave para dormir es una exhalación más larga que la inhalación: eso activa el "modo descanso" del cuerpo y baja las pulsaciones.',
+    why:'La exhalación prolongada estimula el nervio vago y el sistema parasimpático, que induce el sueño.',
+    steps:['Inhalá por la nariz contando 4','Sostené 2 segundos','Exhalá lento por la boca contando 6 u 8','Repetí 10 veces, sintiendo el cuerpo cada vez más pesado'] },
+
+  /* ❤️ RELACIONES */
+  { id:'escucha_activa', cat:'relaciones', ico:'👂', title:'Escucha activa', when:'En una charla difícil o cuando querés que alguien se sienta entendido',
+    intro:'La mayoría escucha solo para responder. La escucha activa (de Thomas Gordon) es escuchar para entender de verdad, y es lo que más desarma conflictos y acerca a la gente.',
+    why:'Cambia el foco del "tú" acusador al entendimiento, y evita el secuestro emocional (amígdala) de la otra persona.',
+    steps:['No interrumpas hasta que el otro termine','Repetí con tus palabras lo que entendiste ("o sea que sentís...")','Preguntá antes de opinar','Recién ahí respondé, desde el "yo"'] },
+  { id:'mensaje_yo', cat:'relaciones', ico:'💬', title:'Mensaje-YO', when:'Cuando tenés que marcar algo sin que el otro explote',
+    intro:'Decir "vos siempre..." hace que el otro se defienda y la discusión escale. Empezar por "yo siento..." cuenta cómo te afecta sin atacar, y abre la empatía en vez de cerrarla.',
+    why:'El "tú" activa la amígdala (modo ataque) del otro; el "yo" activa la empatía y las neuronas espejo. Lo descubrió Thomas Gordon.',
+    steps:['Frená antes de hablar (respirá)','Empezá con "Yo siento / Yo noto..." en vez de "Vos..."','Contá el hecho concreto, sin etiquetas','Pedí lo que necesitás en positivo'] },
+
+  /* 🧘 CALMA */
+  { id:'relajacion_alfa', cat:'calma', ico:'🌀', title:'Relajación profunda (estado Alfa)', when:'Para calmarte fuerte, o como paso previo a visualizar',
+    intro:'El método Silva entrena entrar en un estado de relajación profunda (ondas "alfa"), donde la mente se calma y se vuelve más receptiva. Es la puerta de entrada para visualizar y reprogramar. No es magia: es bajar tu cuerpo a "modo descanso" a propósito.',
+    why:'Coincide con la "respuesta de relajación" de Herbert Benson (Harvard): baja pulsaciones, presión y cortisol al activar el sistema parasimpático.',
+    steps:['Sentate o acostate con los ojos cerrados','Respirá lento inflando la panza, 10 veces','Contá de 10 a 1, bajando un escalón con cada número','En el 1, imaginá tu lugar tranquilo','Quedate 2-3 min; desde acá podés visualizar tu meta'] },
+
+  /* 🔥 FOCO */
+  { id:'foco_monotarea', cat:'foco', ico:'🎯', title:'La regla de un solo foco', when:'Cuando saltás entre mil cosas y no avanzás en ninguna',
+    intro:'Tu cerebro no hace dos cosas conscientes a la vez: la "multitarea" es saltar de una a otra perdiendo energía en cada salto. Elegir UNA sola cosa por bloque es lo que dispara la concentración profunda.',
+    why:'Cada cambio de tarea tiene un costo cognitivo (switching cost) que gasta energía y empeora la memoria. La monotarea reduce ese gasto.',
+    steps:['Elegí UNA tarea para los próximos 25-45 min','Guardá el teléfono y cerrá las pestañas que distraen','Si aparece una distracción, anotala en papel y seguí','Al terminar, tomá un respiro corto antes de la próxima'] }
+];
+const TOOLCAT={miedo:'relaciones',sonrisa:'confianza',difusion:'creencias',placer:'calma',expectativas:'calma',mindfulness:'calma',precompe:'confianza'};
+const CATS=[
+  {id:'dinero',ico:'💰',name:'Tu relación con el dinero',desc:'Reescribí tu historia con la plata y definí tu meta'},
+  {id:'creencias',ico:'🚫',name:'Creencias limitantes',desc:'Detectá y cambiá las frases que te frenan'},
+  {id:'metas',ico:'🎯',name:'Metas y propósito',desc:'Definí a dónde vas y entrená tu mente para lograrlo'},
+  {id:'confianza',ico:'💪',name:'Confianza y autoestima',desc:'Subí tu seguridad antes de cualquier desafío'},
+  {id:'sueno',ico:'😴',name:'Sueño y descanso',desc:'Dormí mejor y aprovechá la noche'},
+  {id:'relaciones',ico:'❤️',name:'Relaciones',desc:'Comunicá mejor y desarmá conflictos'},
+  {id:'calma',ico:'🧘',name:'Calma y ansiedad',desc:'Bajá el estrés y la mente acelerada'},
+  {id:'foco',ico:'🔥',name:'Foco y rendimiento',desc:'Concentración profunda y energía'}
+];
+function toolsOf(catId){return EXTRAS.filter(x=>(x.cat||TOOLCAT[x.id])===catId)}
+let currentCat=null;
+function renderCategories(){
+  const g=document.getElementById('catGrid');if(!g)return;
+  g.innerHTML=CATS.map(c=>{
+    const tools=toolsOf(c.id);
+    const done=tools.filter(x=>db.tested[x.id]&&db.tested[x.id].done).length;
+    return `<div class="catCard" onclick="openCategory('${c.id}')">
+      <div class="ce">${c.ico}</div><b>${c.name}</b><small>${c.desc}</small>
+      <div class="cnt">${tools.length} herramienta${tools.length!=1?'s':''}${done?' · '+done+' probada'+(done!=1?'s':''):''}</div>
+    </div>`;
+  }).join('');
+}
+function openCategory(id){
+  const cat=CATS.find(c=>c.id===id);if(!cat)return;
+  document.getElementById('catHome').style.display='none';
+  document.getElementById('toolView').style.display='block';
+  document.getElementById('catTitle').textContent=cat.ico+' '+cat.name;
+  document.getElementById('catDesc').textContent=cat.desc;
+  renderTools(id);window.scrollTo(0,0);
+}
+function closeCategory(){
+  document.getElementById('toolView').style.display='none';
+  document.getElementById('catHome').style.display='block';
+  renderCategories();window.scrollTo(0,0);
+}
+function toolCardHTML(x){
+  const tested=!!(db.tested[x.id]&&db.tested[x.id].done);
+  const noteVal=(db.notes[x.id]||'').replace(/</g,'&lt;');
+  return `<div class="card${tested?' done':''}">
+    <div class="cardHead" onclick="toggleCard('tc_${x.id}',event)">
+      <div class="ico">${x.ico}</div>
+      <div class="t"><b>${x.title}</b><small>${tested?'ya lo probaste ✓':'tocá para abrir'}</small></div>
+      <div class="chk">✓</div>
+    </div>
+    <div class="body">
+      <div class="intro">${x.intro}</div>
+      ${x.when?`<div class="row"><span class="whenTag">📍 Cuándo usarlo: ${x.when}</span></div>`:''}
+      <div class="row"><div class="lbl">🔬 La ciencia detrás</div><p>${x.why}</p></div>
+      <div class="row"><div class="lbl">Cómo se hace</div><ul class="steps">${x.steps.map((s,i)=>`<li class="${(db.tested[x.id]&&db.tested[x.id].steps&&db.tested[x.id].steps[i])?'on':''}" onclick="xStepTog('${x.id}',${i})"><span class="b">✓</span>${s}</li>`).join('')}</ul></div>
+      ${x.note?`<div class="row"><div class="lbl">Tu nota (se guarda sola)</div><textarea class="noteArea" rows="3" placeholder="Escribí acá lo que surja..." oninput="noteSave('${x.id}',this.value)">${noteVal}</textarea></div>`:''}
+      <button class="btnDone ${tested?'is-done':''}" onclick="xTested('${x.id}')">${tested?'✓ Probado durante la prueba':'Marcar como probado'}</button>
+    </div>
+  </div>`;
+}
+function renderTools(catId){
+  currentCat=catId;
+  const wrap=document.getElementById('toolCards');if(!wrap)return;
+  wrap.innerHTML=toolsOf(catId).map(toolCardHTML).join('');
+}
+function refreshTools(){
+  const op=[...document.querySelectorAll('#toolCards .card')].map(c=>c.classList.contains('open'));
+  renderTools(currentCat);
+  [...document.querySelectorAll('#toolCards .card')].forEach((c,i)=>{if(op[i])c.classList.add('open')});
+}
+function xStepTog(id,i){db.tested[id]=db.tested[id]||{steps:{}};db.tested[id].steps=db.tested[id].steps||{};db.tested[id].steps[i]=!db.tested[id].steps[i];DB.save(db);refreshTools()}
+function xTested(id){db.tested[id]=db.tested[id]||{steps:{}};db.tested[id].done=!db.tested[id].done;DB.save(db);if(db.tested[id].done)toast('🧰 Anotado. Buen experimento.');refreshTools()}
+function noteSave(id,v){db.notes[id]=v;DB.save(db)}
+
+/* ---------- nav ---------- */
+function go(s){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  document.getElementById(s).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.s===s));
+  if(s==='progreso')renderProgress();
+  if(s==='tarde')renderTarde();
+  if(s==='resolver'){document.getElementById('toolView').style.display='none';document.getElementById('catHome').style.display='block';renderCategories();}
+  window.scrollTo(0,0);
+}
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200)}
+
+/* ---------- welcome ---------- */
+function showWelcome(){document.getElementById('welcome').classList.add('show');window.scrollTo(0,0)}
+function hideWelcome(){document.getElementById('welcome').classList.remove('show');db.seen=true;DB.save(db)}
+
+/* ---------- init ---------- */
+(function init(){
+  if(!db.seen)showWelcome();
+  const now=new Date();
+  document.getElementById('date').textContent=now.toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
+  const h=now.getHours();
+  document.getElementById('greet').textContent = h<12?'Buen día':h<19?'Buenas tardes':'Buenas noches';
+  if(today.state){document.querySelector('.stateBtns .'+today.state)?.classList.add('sel');setState(today.state)}
+  renderCards();
+})();
+
+/* ---------- service worker (instalable + offline) ---------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
