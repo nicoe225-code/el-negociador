@@ -1,4 +1,4 @@
-const CACHE = 'negociador-v2';
+const CACHE = 'negociador-v3';
 const ASSETS = [
   './',
   './index.html',

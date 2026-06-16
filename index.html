@@ -207,6 +207,10 @@
   .catCard .cnt{margin-top:9px;font-size:11px;color:var(--accent);font-weight:700}
   .backBtn{background:none;border:none;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;padding:2px 0;margin-bottom:2px}
   textarea.noteArea{width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px;font-size:14px;font-family:inherit;resize:vertical}
+  .saveHint{font-size:12px;color:var(--green);margin:0 0 10px;display:flex;align-items:center;gap:5px}
+  .fieldLbl{display:block;font-size:13px;color:#cdd6e3;font-weight:600;margin:12px 0 5px}
+  .doneHint{font-size:13px;margin:12px 0 0;line-height:1.55;padding:11px 12px;border-radius:12px;background:var(--bg2)}
+  .doneHint.ok{background:rgba(63,202,161,.12);color:#bfeede}
 </style>
 </head>
 <body>
@@ -766,31 +770,31 @@ const EXTRAS=[
   { id:'dinero_historia', cat:'dinero', ico:'🧾', title:'Tu historia del dinero', when:'Cuando sentís que la plata no es para vos o repetís los mismos problemas con el dinero',
     intro:'De chico aprendiste, sin darte cuenta, qué significa el dinero por lo que escuchabas en casa: "no somos ricos", "el dinero es sucio", "hay que sufrir para ganarlo". Esas frases hoy son <b>reglas invisibles</b> que manejan tus decisiones. El primer paso para cambiar tu economía es verlas.',
     why:'Son "reglas" grabadas en tu modelo del mundo: cosas que asumís como verdad sin haberlas comprobado. Al hacerlas conscientes, dejan de funcionar en piloto automático.',
-    steps:['Escribí 3 frases sobre el dinero que escuchabas de chico','Marcá cuál todavía guía tus decisiones de hoy','Preguntate: es verdad, o es solo una regla heredada','Reescribila mejor (ej: "el dinero es una herramienta que sé manejar")'], note:true },
+    steps:['Escribí 3 frases sobre el dinero que escuchabas de chico','Marcá cuál todavía guía tus decisiones de hoy','Preguntate: es verdad, o es solo una regla heredada','Reescribila mejor (ej: "el dinero es una herramienta que sé manejar")'], fields:['Escribí 3 frases sobre el dinero que escuchabas de chico','¿Cuál de esas frases todavía guía tus decisiones hoy?','¿Es verdad, o es solo una regla heredada?','Reescribila mejor, en positivo'] },
   { id:'dinero_meta', cat:'dinero', ico:'🎯', title:'Tu meta financiera definida', when:'Cuando querés más dinero pero no avanzás (deseo difuso)',
     intro:'Napoleón Hill decía que el deseo vago ("quiero más plata") no mueve a nadie. Lo que mueve es un <b>objetivo definido</b>: cuánto, para cuándo y qué vas a dar a cambio. Escribirlo y leerlo seguido enfoca tu cerebro.',
     why:'Las metas específicas con plazo activan tu filtro perceptivo (el 10%): empezás a ver oportunidades que antes ignorabas, como cuando comprás un auto y lo ves en todos lados.',
-    steps:['Escribí la cantidad exacta y la fecha límite','Escribí qué vas a DAR a cambio (valor, servicio, trabajo)','Leelo en voz alta al despertar y antes de dormir','Visualizá 1 min cómo se siente tenerlo'], note:true },
+    steps:['Escribí la cantidad exacta y la fecha límite','Escribí qué vas a DAR a cambio (valor, servicio, trabajo)','Leelo en voz alta al despertar y antes de dormir','Visualizá 1 min cómo se siente tenerlo'], fields:['¿Qué cantidad exacta querés, y para qué fecha?','¿Qué vas a DAR a cambio (valor, servicio, trabajo)?'] },
   { id:'dinero_abundancia', cat:'dinero', ico:'🌱', title:'De escasez a oportunidad', when:'Cuando solo ves lo que te falta y vivís en modo carencia',
     intro:'Si tu cerebro busca "lo que falta", encuentra falta en todos lados. Si lo entrenás a buscar oportunidades, las empieza a ver. No es pensamiento mágico: es hacia dónde apuntás tu atención.',
     why:'El filtro del 10%: solo percibís una fracción del entorno, definida por lo que tu cerebro cree importante. Lo que mirás repetido, lo ves más.',
-    steps:['Anotá 3 cosas que SÍ tenés hoy (salud, un contacto, una habilidad)','Anotá 1 oportunidad concreta a tu alcance que no estabas mirando','Definila como tarea abierta para que tu cerebro la rastree'] },
+    steps:['Anotá 3 cosas que SÍ tenés hoy (salud, un contacto, una habilidad)','Anotá 1 oportunidad concreta a tu alcance que no estabas mirando','Definila como tarea abierta para que tu cerebro la rastree'], fields:['3 cosas que SÍ tenés hoy (salud, un contacto, una habilidad)','1 oportunidad concreta a tu alcance que no estabas mirando'] },
 
   /* 🚫 CREENCIAS */
   { id:'creencia_reescribir', cat:'creencias', ico:'✏️', title:'Detectar y reescribir una creencia', when:'Cuando una frase tipo "no sirvo para esto" te frena',
     intro:'Una creencia limitante es una frase que repetís sobre vos como si fuera un hecho: "no sirvo", "siempre me va mal", "no soy de los que lo logran". No es la realidad: es una regla vieja. Y toda regla se puede reescribir.',
     why:'Reestructuración cognitiva (terapia cognitiva) + difusión cognitiva: confrontar el pensamiento con evidencia y separarlo de tu identidad le quita poder.',
-    steps:['Escribí la creencia exacta que te limita','Buscá 2 pruebas reales de que NO siempre es cierta','Reescribila más justa: "estoy aprendiendo a..." en vez de "no sé"','Repetí la versión nueva cada vez que aparezca la vieja'], note:true },
+    steps:['Escribí la creencia exacta que te limita','Buscá 2 pruebas reales de que NO siempre es cierta','Reescribila más justa: "estoy aprendiendo a..." en vez de "no sé"','Repetí la versión nueva cada vez que aparezca la vieja'], fields:['La creencia exacta que te limita','2 pruebas reales de que NO siempre es cierta','La versión nueva, más justa'] },
   { id:'afirmacion_identidad', cat:'creencias', ico:'🪞', title:'Afirmación de identidad (Yo soy)', when:'Para fortalecer quién querés ser',
     intro:'Hill insistía en la <b>autosugestión</b>: repetirte quién querés ser hasta que tu cerebro lo asume. Funciona si la afirmación es creíble y la sentís, no si es un slogan vacío.',
     why:'Tu diálogo interno moldea redes neuronales (neuroplasticidad). Las afirmaciones de identidad realistas funcionan mejor que las grandilocuentes, que el cerebro rechaza.',
-    steps:['Elegí UNA identidad a fortalecer ("soy una persona constante")','Escribila en presente y creíble','Decila mirándote al espejo 1 min, sintiéndola','Buscá hoy 1 acción chica que la confirme'] },
+    steps:['Elegí UNA identidad a fortalecer ("soy una persona constante")','Escribila en presente y creíble','Decila mirándote al espejo 1 min, sintiéndola','Buscá hoy 1 acción chica que la confirme'], fields:['La identidad que querés fortalecer, en presente ("soy una persona...")','1 acción chica de hoy que la confirme'] },
 
   /* 🎯 METAS */
   { id:'objetivo_definido', cat:'metas', ico:'🧭', title:'Tu objetivo principal definido', when:'Cuando no tenés claro hacia dónde vas',
     intro:'Hill lo llamaba el "objetivo principal definido": una sola meta clara a la que le dedicás tu energía. Tener una, bien definida, ordena todas tus decisiones.',
     why:'Un objetivo concreto reprograma tu filtro perceptivo y te da un "para qué", que es lo que sostiene la motivación cuando baja el placer.',
-    steps:['Escribí tu objetivo principal en una sola frase','Ponele fecha y un primer paso para esta semana','Releelo cada mañana','Chequeá: lo que hago hoy, me acerca o me aleja'], note:true },
+    steps:['Escribí tu objetivo principal en una sola frase','Ponele fecha y un primer paso para esta semana','Releelo cada mañana','Chequeá: lo que hago hoy, me acerca o me aleja'], fields:['Tu objetivo principal, en una sola frase','Fecha límite + el primer paso de esta semana'] },
   { id:'visualizacion', cat:'metas', ico:'🎬', title:'Visualización (ensayo mental)', when:'Antes de un desafío importante o para fijar una meta',
     intro:'El método Silva lo llama "pantalla mental": ver con detalle el resultado que querés, ya logrado. En el deporte de élite se llama ensayo mental y está comprobado que mejora el rendimiento real.',
     why:'Imaginar una acción activa redes cerebrales casi iguales a ejecutarla (psicología del deporte). Sube la confianza y prepara al cuerpo.',
@@ -800,7 +804,7 @@ const EXTRAS=[
   { id:'sueno_programar', cat:'sueno', ico:'🌙', title:'Programar tu mente antes de dormir', when:'Cuando tenés un problema o decisión sin resolver',
     intro:'Justo antes de dormir, tu mente entra en un estado muy receptivo. Silva aprovecha ese momento para "sembrar" una pregunta o intención. Tu cerebro la sigue trabajando mientras dormís y muchas veces amanecés con la respuesta.',
     why:'Durante el sueño se consolida la memoria y se incuban soluciones. Plantear una intención antes de dormir aprovecha ese proceso real.',
-    steps:['En la cama, relajá la respiración','Planteá UNA pregunta clara ("mañana encuentro la forma de...")','No la fuerces; soltala y dejá que el sueño trabaje','Al despertar, anotá lo primero que aparezca'], note:true },
+    steps:['En la cama, relajá la respiración','Planteá UNA pregunta clara ("mañana encuentro la forma de...")','No la fuerces; soltala y dejá que el sueño trabaje','Al despertar, anotá lo primero que aparezca'], fields:['La pregunta o intención que vas a "sembrar" esta noche','(A la mañana) Lo primero que apareció al despertar'] },
   { id:'sueno_respiracion', cat:'sueno', ico:'😮‍💨', title:'Respiración para dormir', when:'Cuando no podés bajar las revoluciones en la cama',
     intro:'La clave para dormir es una exhalación más larga que la inhalación: eso activa el "modo descanso" del cuerpo y baja las pulsaciones.',
     why:'La exhalación prolongada estimula el nervio vago y el sistema parasimpático, que induce el sueño.',
@@ -871,7 +875,7 @@ function closeCategory(){
 }
 function toolCardHTML(x){
   const tested=!!(db.tested[x.id]&&db.tested[x.id].done);
-  const noteVal=(db.notes[x.id]||'').replace(/</g,'&lt;');
+  const N=(db.notes[x.id]&&typeof db.notes[x.id]==='object')?db.notes[x.id]:{};
   return `<div class="card${tested?' done':''}">
     <div class="cardHead" onclick="toggleCard('tc_${x.id}',event)">
       <div class="ico">${x.ico}</div>
@@ -883,8 +887,12 @@ function toolCardHTML(x){
       ${x.when?`<div class="row"><span class="whenTag">📍 Cuándo usarlo: ${x.when}</span></div>`:''}
       <div class="row"><div class="lbl">🔬 La ciencia detrás</div><p>${x.why}</p></div>
       <div class="row"><div class="lbl">Cómo se hace</div><ul class="steps">${x.steps.map((s,i)=>`<li class="${(db.tested[x.id]&&db.tested[x.id].steps&&db.tested[x.id].steps[i])?'on':''}" onclick="xStepTog('${x.id}',${i})"><span class="b">✓</span>${s}</li>`).join('')}</ul></div>
-      ${x.note?`<div class="row"><div class="lbl">Tu nota (se guarda sola)</div><textarea class="noteArea" rows="3" placeholder="Escribí acá lo que surja..." oninput="noteSave('${x.id}',this.value)">${noteVal}</textarea></div>`:''}
-      <button class="btnDone ${tested?'is-done':''}" onclick="xTested('${x.id}')">${tested?'✓ Probado durante la prueba':'Marcar como probado'}</button>
+      ${x.fields?`<div class="row"><div class="lbl">✍️ Tu espacio para escribir</div>
+        <p class="saveHint">💾 Se guarda solo en este dispositivo. Podés cerrar y volver cuando quieras.</p>
+        ${x.fields.map((f,i)=>`<label class="fieldLbl">${f}</label><textarea class="noteArea" rows="2" placeholder="Escribí acá..." oninput="noteSave('${x.id}',${i},this.value)">${(N[i]||'').replace(/</g,'&lt;')}</textarea>`).join('')}
+      </div>`:''}
+      <button class="btnDone ${tested?'is-done':''}" onclick="xTested('${x.id}')">${tested?(x.fields?'✓ Hecho y guardado':'✓ Probado durante la prueba'):(x.fields?'Marcar como hecho':'Marcar como probado')}</button>
+      ${x.fields?`<p class="doneHint${tested?' ok':''}">${tested?'✓ Listo. Lo que escribiste queda guardado acá. Cuando vuelvas a esta herramienta vas a verlo, y podés actualizarlo cuando quieras.':'Escribí lo que puedas (no hace falta llenar todo de una). Cuando termines, tocá "Marcar como hecho". Podés volver a editarlo otro día.'}</p>`:''}
     </div>
   </div>`;
 }
@@ -900,7 +908,7 @@ function refreshTools(){
 }
 function xStepTog(id,i){db.tested[id]=db.tested[id]||{steps:{}};db.tested[id].steps=db.tested[id].steps||{};db.tested[id].steps[i]=!db.tested[id].steps[i];DB.save(db);refreshTools()}
 function xTested(id){db.tested[id]=db.tested[id]||{steps:{}};db.tested[id].done=!db.tested[id].done;DB.save(db);if(db.tested[id].done)toast('🧰 Anotado. Buen experimento.');refreshTools()}
-function noteSave(id,v){db.notes[id]=v;DB.save(db)}
+function noteSave(id,i,v){if(typeof db.notes[id]!=='object'||db.notes[id]===null)db.notes[id]={};db.notes[id][i]=v;DB.save(db)}
 
 /* ---------- nav ---------- */
 function go(s){
