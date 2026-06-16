@@ -211,6 +211,8 @@
   .fieldLbl{display:block;font-size:13px;color:#cdd6e3;font-weight:600;margin:12px 0 5px}
   .doneHint{font-size:13px;margin:12px 0 0;line-height:1.55;padding:11px 12px;border-radius:12px;background:var(--bg2)}
   .doneHint.ok{background:rgba(63,202,161,.12);color:#bfeede}
+  .artBox{display:flex;justify-content:center;background:var(--bg2);border-radius:14px;padding:16px;margin:8px 0 2px}
+  .artBox svg{max-width:120px;height:auto}
 </style>
 </head>
 <body>
@@ -492,6 +494,7 @@ const CARDS = [
     why:'Estudios de Harvard (Amy Cuddy) y con primates (Sapolsky) mostraron que 2 minutos en esta postura ya cambian tus niveles hormonales medibles en sangre.',
     benefit:'+ Testosterona (confianza) · − Cortisol (ansiedad)',
     steps:['Pies al ancho de los hombros','Caderas hacia adelante','Hombros echados hacia atrás','Mentón un poco arriba','Codos separados del cuerpo (más separados = más fuerza)'],
+    art:'<svg viewBox="0 0 120 170" width="120" height="170" fill="none" stroke="#4f9dff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="22" r="13" fill="#4f9dff" stroke="none"/><line x1="60" y1="35" x2="60" y2="95"/><line x1="40" y1="52" x2="80" y2="52"/><path d="M40 52 L33 74 L52 93"/><path d="M80 52 L87 74 L68 93"/><line x1="50" y1="95" x2="70" y2="95"/><line x1="54" y1="95" x2="44" y2="150"/><line x1="66" y1="95" x2="76" y2="150"/><line x1="44" y1="150" x2="35" y2="153"/><line x1="76" y1="150" x2="85" y2="153"/></svg>',
     timer:120 },
   { id:'respira', ico:'🫁', title:'Respiración diafragmática', tag:'5 min · destrabá tu cabeza',
     intro:'La mayoría respira con el pecho, corto y rápido —y eso, sin que te des cuenta, le avisa a tu cerebro que hay peligro y te deja en modo "reacción". Respirar inflando la <b>panza</b> hace lo contrario: le dice "estás a salvo", y entonces tu cerebro devuelve la sangre a la parte que piensa con claridad (la que se apaga cuando estás estresado). Es, literalmente, el botón de apagado del estrés. Con 5 minutos alcanza, y es la base para poder concentrarte en serio.',
@@ -528,6 +531,7 @@ function renderCards(){
       </div>
       <div class="body">
         <div class="intro">${card.intro}</div>
+        ${card.art?`<div class="artBox">${card.art}</div>`:''}
         <div class="row"><div class="lbl">Por qué funciona (la ciencia)</div><p>${card.why}</p></div>
         <div class="row"><span class="benefit">${card.benefit}</span></div>
         ${card.steps.length?`<div class="row"><div class="lbl">Cómo se hace</div><ul class="steps">${
@@ -611,6 +615,7 @@ function renderTarde(){
       </div>
       <div class="body">
         <div class="intro">${card.intro}</div>
+        ${card.art?`<div class="artBox">${card.art}</div>`:''}
         <div class="row"><div class="lbl">Por qué funciona (la ciencia)</div><p>${card.why}</p></div>
         <div class="row"><span class="benefit">${card.benefit}</span></div>
         <div class="row"><div class="lbl">Cómo se hace</div><ul class="steps">${card.steps.map((s,i)=>`<li class="${st.steps[i]?'on':''}" onclick="tStepTog('${card.id}',${i})"><span class="b">✓</span>${s}</li>`).join('')}</ul></div>
@@ -834,7 +839,11 @@ const EXTRAS=[
   { id:'foco_monotarea', cat:'foco', ico:'🎯', title:'La regla de un solo foco', when:'Cuando saltás entre mil cosas y no avanzás en ninguna',
     intro:'Tu cerebro no hace dos cosas conscientes a la vez: la "multitarea" es saltar de una a otra perdiendo energía en cada salto. Elegir UNA sola cosa por bloque es lo que dispara la concentración profunda.',
     why:'Cada cambio de tarea tiene un costo cognitivo (switching cost) que gasta energía y empeora la memoria. La monotarea reduce ese gasto.',
-    steps:['Elegí UNA tarea para los próximos 25-45 min','Guardá el teléfono y cerrá las pestañas que distraen','Si aparece una distracción, anotala en papel y seguí','Al terminar, tomá un respiro corto antes de la próxima'] }
+    steps:['Elegí UNA tarea para los próximos 25-45 min','Guardá el teléfono y cerrá las pestañas que distraen','Si aparece una distracción, anotala en papel y seguí','Al terminar, tomá un respiro corto antes de la próxima'] },
+  { id:'activar_energia', cat:'foco', ico:'🔋', title:'Subir la energía (activación)', when:'Cuando estás con sueño, pesado o sin ganas (después de comer, una siesta o media tarde)',
+    intro:'Ese bajón es normal: después de comer o de una siesta corta, el cuerpo queda en "modo descanso" (se llama inercia del sueño). El truco no es forzarte con fuerza de voluntad, es <b>mandarle a tu cuerpo la señal opuesta</b>: movimiento, respiración rápida, luz y un poco de frío te activan en 2-3 minutos. Es pura química, no carácter.',
+    why:'La respiración rápida y el movimiento breve activan el sistema nervioso simpático y liberan adrenalina y noradrenalina, que suben el estado de alerta (es lo contrario del suspiro que calma). La luz fuerte corta la melatonina y el frío dispara noradrenalina.',
+    steps:['Parate y movete 1-2 min: saltos, sentadillas o caminar rápido','Respiración activadora: 20-30 respiraciones rápidas y profundas (si te mareás, frená)','Buscá luz fuerte: salí al sol o ponete frente a una ventana','Mojate la cara o la nuca con agua fría (o un trago de agua bien fría)','Postura de poder 30 seg y decite: "tengo energía para esto"'] }
 ];
 const TOOLCAT={miedo:'relaciones',sonrisa:'confianza',difusion:'creencias',placer:'calma',expectativas:'calma',mindfulness:'calma',precompe:'confianza'};
 const CATS=[
