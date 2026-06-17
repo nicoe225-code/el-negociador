@@ -1,4 +1,4 @@
-const CACHE = 'negociador-v7';
+const CACHE = 'negociador-v8';
 const ASSETS = [
   './',
   './index.html',

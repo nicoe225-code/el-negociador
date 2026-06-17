@@ -213,6 +213,14 @@
   .doneHint.ok{background:rgba(63,202,161,.12);color:#bfeede}
   .artBox{display:flex;justify-content:center;background:var(--bg2);border-radius:14px;padding:16px;margin:8px 0 2px}
   .artBox svg{max-width:150px;height:auto}
+  .routineSec{margin-top:10px}
+  .routineH{font-size:16px;font-weight:600;margin:26px 0 10px;display:flex;align-items:center;gap:6px}
+  .routineEmpty{font-size:13px;color:var(--muted);background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:14px;line-height:1.5}
+  .routineCtl{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+  .routineLbl{font-size:12.5px;color:var(--muted);display:block;margin-bottom:8px}
+  .slotBtns{display:flex;gap:8px}
+  .slotBtns button{flex:1;border:1px solid var(--line);background:var(--card2);color:var(--txt);border-radius:12px;padding:9px 6px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .slotBtns button.on{border-color:var(--accent);background:rgba(79,157,255,.18);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -297,6 +305,8 @@
     </div>
 
     <div id="cards"></div>
+
+    <div class="routineSec"><h2 class="routineH">🔁 Tu rutina de la mañana</h2><div id="routine_manana"></div></div>
 
     <div class="celebrate" id="celebrate" style="display:none">
       <div class="big">🎉</div>
@@ -385,6 +395,8 @@
     <div style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-top:4px">
       <p style="margin:0;font-size:13px;color:var(--muted)">⚡ ¿Conflicto o discusión ahora? Usá el botón <b style="color:var(--red)">SOS</b> abajo a la derecha: respiración + balcón + mensaje-YO.</p>
     </div>
+
+    <div class="routineSec"><h2 class="routineH">🔁 Tu rutina de la tarde</h2><div id="routine_tarde"></div></div>
   </section>
 
   <!-- ===== NOCHE ===== -->
@@ -415,6 +427,8 @@
         </div>
       </div>
     </div>
+
+    <div class="routineSec"><h2 class="routineH">🔁 Tu rutina de la noche</h2><div id="routine_noche"></div></div>
 
     <div class="celebrate">
       <div class="big">🥉</div>
@@ -485,6 +499,7 @@ db.days = db.days||{};
 db.wins = db.wins||[];
 db.tested = db.tested||{};
 db.notes = db.notes||{};
+db.routine = db.routine||{};db.routine.manana=db.routine.manana||[];db.routine.tarde=db.routine.tarde||[];db.routine.noche=db.routine.noche||[];
 let today = db.days[todayKey] = db.days[todayKey] || {state:null,cards:{},night:false};
 function persist(){ db.days[todayKey]=today; DB.save(db) }
 
@@ -515,7 +530,12 @@ const CARDS = [
     why:'La luz matinal regula tu ritmo de cortisol (Huberman). Las "intenciones de implementación" automatizan la conducta sin esfuerzo consciente.',
     benefit:'Mejor energía y sueño · menos dependencia de la voluntad',
     steps:['Exponete a luz natural unos minutos (ventana o afuera)','Escribí 1 intención tipo: "Si pasa ___, entonces hago ___"'],
-    input2:true }
+    input2:true },
+  { id:'energia', ico:'🔋', title:'Subir la energía', tag:'2-3 min · activá el cuerpo al despertar',
+    intro:'Si te levantás con sueño o pesadez (inercia del sueño), no es falta de carácter: tu cuerpo sigue en "modo descanso". Le mandás la señal contraria con movimiento, respiración rápida, luz y un poco de frío, y te activás en 2-3 minutos. A la mañana suma doble: la luz también ordena tu reloj interno.',
+    why:'El movimiento y la respiración rápida activan el sistema simpático y liberan adrenalina y noradrenalina (suben el estado de alerta). La luz fuerte corta la melatonina y el frío dispara noradrenalina.',
+    benefit:'Despierta el cuerpo · corta la inercia del sueño',
+    steps:['Movete 1-2 min: saltos, sentadillas o caminar rápido','Respiración activadora (sentado o parado): 20-30 respiraciones rápidas; si te mareás, frená','Buscá luz natural: ventana o salí afuera','Mojate la cara o la nuca con agua fría'] }
 ];
 
 /* ---------- render ---------- */
@@ -793,7 +813,7 @@ const EXTRAS=[
     intro:'Una creencia limitante es una frase que repetís sobre vos como si fuera un hecho: "no sirvo", "siempre me va mal", "no soy de los que lo logran". No es la realidad: es una regla vieja. Y toda regla se puede reescribir.',
     why:'Reestructuración cognitiva (terapia cognitiva) + difusión cognitiva: confrontar el pensamiento con evidencia y separarlo de tu identidad le quita poder.',
     steps:['Escribí la creencia exacta que te limita','Buscá 2 pruebas reales de que NO siempre es cierta','Reescribila más justa: "estoy aprendiendo a..." en vez de "no sé"','Repetí la versión nueva cada vez que aparezca la vieja'], fields:['La creencia exacta que te limita','2 pruebas reales de que NO siempre es cierta','La versión nueva, más justa'] },
-  { id:'afirmacion_identidad', cat:'creencias', ico:'🪞', title:'Afirmación de identidad (Yo soy)', when:'Para fortalecer quién querés ser',
+  { id:'afirmacion_identidad', cat:'creencias', ico:'🪞', title:'Autosugestión: afirmación (Yo soy)', when:'A la mañana y a la noche, todos los días (sumala a tu rutina)',
     intro:'Hill insistía en la <b>autosugestión</b>: repetirte quién querés ser hasta que tu cerebro lo asume. Funciona si la afirmación es creíble y la sentís, no si es un slogan vacío.',
     why:'Tu diálogo interno moldea redes neuronales (neuroplasticidad). Las afirmaciones de identidad realistas funcionan mejor que las grandilocuentes, que el cerebro rechaza.',
     steps:['Elegí UNA identidad a fortalecer ("soy una persona constante")','Escribila en presente y creíble','Decila mirándote al espejo 1 min, sintiéndola','Buscá hoy 1 acción chica que la confirme'], fields:['La identidad que querés fortalecer, en presente ("soy una persona...")','1 acción chica de hoy que la confirme'] },
@@ -817,6 +837,14 @@ const EXTRAS=[
     intro:'La clave para dormir es una exhalación más larga que la inhalación: eso activa el "modo descanso" del cuerpo y baja las pulsaciones.',
     why:'La exhalación prolongada estimula el nervio vago y el sistema parasimpático, que induce el sueño.',
     steps:['Inhalá por la nariz contando 4','Sostené 2 segundos','Exhalá lento por la boca contando 6 u 8','Repetí 10 veces, sintiendo el cuerpo cada vez más pesado'] },
+  { id:'apagar_pantallas', cat:'sueno', ico:'📵', title:'Apagar pantallas antes de dormir', when:'Cada noche, en la última hora antes de acostarte',
+    intro:'La luz de las pantallas (celular, tele, compu) le hace creer a tu cerebro que todavía es de día, y frena la melatonina, la hormona que te da sueño. Cortar las pantallas un rato antes de dormir hace que te duermas más rápido y descanses mejor. Sumala a tu rutina de la noche con un horario fijo.',
+    why:'La luz azul de las pantallas inhibe la melatonina y retrasa el reloj biológico. Sin esa luz, el cerebro produce la señal de sueño a horario.',
+    steps:['Elegí una hora de corte (ej: 22:30) y ponete una alarma','A esa hora, dejá el celular fuera de la cama (cargando lejos)','Bajá las luces fuertes de la casa','Reemplazá la pantalla por leer, estirar o respirar'] },
+  { id:'leer_dormir', cat:'sueno', ico:'📖', title:'Leer un rato antes de dormir', when:'En la cama, reemplazando el celular',
+    intro:'Leer (en papel o lector sin luz azul) baja las revoluciones de la mente y crea una señal clara de "es hora de dormir". Es uno de los hábitos nocturnos más simples y efectivos. Con 10-15 minutos alcanza.',
+    why:'Leer desvía la atención de las preocupaciones (que disparan cortisol) y, sin luz azul, no interfiere con la melatonina. La rutina repetida se vuelve un disparador de sueño.',
+    steps:['Tené un libro a mano en la mesa de luz (no el celular)','Leé 10-15 minutos, sin pantallas','Si te da sueño, dejá y apagá la luz','Repetilo siempre a la misma hora para que tu cerebro lo asocie'] },
 
   /* ❤️ RELACIONES */
   { id:'escucha_activa', cat:'relaciones', ico:'👂', title:'Escucha activa', when:'En una charla difícil o cuando querés que alguien se sienta entendido',
@@ -907,18 +935,42 @@ function toolCardHTML(x){
       </div>`:''}
       <button class="btnDone ${tested?'is-done':''}" onclick="xTested('${x.id}')">${tested?(x.fields?'✓ Hecho y guardado':'✓ Probado durante la prueba'):(x.fields?'Marcar como hecho':'Marcar como probado')}</button>
       ${x.fields?`<p class="doneHint${tested?' ok':''}">${tested?'✓ Listo. Lo que escribiste queda guardado acá. Cuando vuelvas a esta herramienta vas a verlo, y podés actualizarlo cuando quieras.':'Escribí lo que puedas (no hace falta llenar todo de una). Cuando termines, tocá "Marcar como hecho". Podés volver a editarlo otro día.'}</p>`:''}
+      <div class="routineCtl">
+        <span class="routineLbl">¿La vas a hacer seguido? Sumala a tu rutina diaria:</span>
+        <div class="slotBtns">
+          <button class="${inSlot(x.id,'manana')?'on':''}" onclick="toggleRoutine('${x.id}','manana')">☀️ Mañana</button>
+          <button class="${inSlot(x.id,'tarde')?'on':''}" onclick="toggleRoutine('${x.id}','tarde')">🌤️ Tarde</button>
+          <button class="${inSlot(x.id,'noche')?'on':''}" onclick="toggleRoutine('${x.id}','noche')">🌙 Noche</button>
+        </div>
+      </div>
     </div>
   </div>`;
 }
-function renderTools(catId){
-  currentCat=catId;
-  const wrap=document.getElementById('toolCards');if(!wrap)return;
-  wrap.innerHTML=toolsOf(catId).map(toolCardHTML).join('');
+function paintTools(wrap,tools){
+  if(!wrap)return;
+  const op=[...wrap.querySelectorAll('.card')].map(c=>c.classList.contains('open'));
+  wrap.innerHTML=tools.map(toolCardHTML).join('');
+  [...wrap.querySelectorAll('.card')].forEach((c,i)=>{if(op[i])c.classList.add('open')});
+}
+function renderTools(catId){currentCat=catId;paintTools(document.getElementById('toolCards'),toolsOf(catId));}
+function routineTools(slot){return (db.routine[slot]||[]).map(id=>EXTRAS.find(t=>t.id===id)).filter(Boolean);}
+function renderRoutine(slot){
+  const wrap=document.getElementById('routine_'+slot);if(!wrap)return;
+  const tools=routineTools(slot);
+  if(!tools.length){wrap.innerHTML='<p class="routineEmpty">Todavía no sumaste herramientas acá. Entrá a 🧰 Resolver, abrí una herramienta y tocá el momento del día para sumarla a tu rutina.</p>';return;}
+  paintTools(wrap,tools);
 }
 function refreshTools(){
-  const op=[...document.querySelectorAll('#toolCards .card')].map(c=>c.classList.contains('open'));
-  renderTools(currentCat);
-  [...document.querySelectorAll('#toolCards .card')].forEach((c,i)=>{if(op[i])c.classList.add('open')});
+  if(currentCat)paintTools(document.getElementById('toolCards'),toolsOf(currentCat));
+  ['manana','tarde','noche'].forEach(s=>renderRoutine(s));
+}
+function inSlot(id,slot){return (db.routine[slot]||[]).indexOf(id)>=0;}
+function toggleRoutine(id,slot){
+  db.routine[slot]=db.routine[slot]||[];
+  const i=db.routine[slot].indexOf(id);
+  if(i>=0){db.routine[slot].splice(i,1);toast('Quitada de tu rutina');}
+  else{db.routine[slot].push(id);toast('🔁 Sumada a tu rutina');}
+  DB.save(db);refreshTools();
 }
 function xStepTog(id,i){db.tested[id]=db.tested[id]||{steps:{}};db.tested[id].steps=db.tested[id].steps||{};db.tested[id].steps[i]=!db.tested[id].steps[i];DB.save(db);refreshTools()}
 function xTested(id){db.tested[id]=db.tested[id]||{steps:{}};db.tested[id].done=!db.tested[id].done;DB.save(db);if(db.tested[id].done)toast('🧰 Anotado. Buen experimento.');refreshTools()}
@@ -932,6 +984,9 @@ function go(s){
   if(s==='progreso')renderProgress();
   if(s==='tarde')renderTarde();
   if(s==='resolver'){document.getElementById('toolView').style.display='none';document.getElementById('catHome').style.display='block';renderCategories();}
+  if(s==='hoy')renderRoutine('manana');
+  if(s==='tarde')renderRoutine('tarde');
+  if(s==='noche')renderRoutine('noche');
   window.scrollTo(0,0);
 }
 function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200)}
