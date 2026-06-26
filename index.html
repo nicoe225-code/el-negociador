@@ -103,6 +103,7 @@
     transition:transform 4s ease-in-out;transform:scale(.7);box-shadow:0 0 60px rgba(79,157,255,.35)}
   .orb.in{transform:scale(1.15);transition-duration:4s}
   .orb.out{transform:scale(.65);transition-duration:6s}
+  .orb.hold{transform:scale(1.15);box-shadow:0 0 90px rgba(124,92,255,.65)}
 
   /* SOS */
   .sosIntro{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:16px}
@@ -867,6 +868,12 @@ const EXTRAS=[
     steps:['Primero entrá en calma con "Relajación profunda (estado Alfa)"','Ya relajado, juntá las puntas del pulgar, índice y mayor de una mano','Quedate ahí sintiendo la calma; repetí el gesto 3-4 veces en esa sesión','Hacelo varios días seguidos para grabar la asociación (sin repetición no prende)','En la situación real: juntá los 3 dedos + una respiración lenta para disparar el estado'],
     art:'<svg viewBox="0 0 240 285" role="img" xmlns="http://www.w3.org/2000/svg"><title>Ancla de los 3 dedos</title><desc>Una mano con el pulgar, el indice y el mayor juntos por las puntas.</desc><ellipse cx="120" cy="264" rx="40" ry="8" fill="#1b2330" opacity="0.12"/><rect x="98" y="214" width="44" height="30" rx="12" fill="#bcdcf7"/><rect x="104" y="182" width="32" height="40" rx="14" fill="#f3c49b"/><ellipse cx="120" cy="172" rx="28" ry="30" fill="#f3c49b"/><path d="M107 166 L116 96" stroke="#f3c49b" stroke-width="15" stroke-linecap="round" fill="none"/><path d="M120 166 L120 90" stroke="#f3c49b" stroke-width="15" stroke-linecap="round" fill="none"/><path d="M133 166 L124 96" stroke="#f3c49b" stroke-width="15" stroke-linecap="round" fill="none"/><circle cx="120" cy="92" r="9" fill="#f3c49b"/></svg>' },
 
+  { id:'respira478', cat:'calma', ico:'🫁', title:'Respiración 4-7-8', when:'Para dormir mejor, bajar ansiedad intensa o calmarte antes de algo estresante',
+    intro:'El Dr. Andrew Weil la llama el <b>tranquilizante natural del sistema nervioso</b>. Inhalás 4 segundos, retenés 7 y exhalás lento 8. La retención y la exhalación larga activan el sistema parasimpático (el "modo calma") de forma más profunda que cualquier otra técnica. Usada antes de dormir, reduce el tiempo que tardás en quedarte dormido. 5 minutos alcanzan.',
+    why:'La exhalación prolongada (más que la inhalación) estimula el nervio vago y baja la frecuencia cardíaca. La retención eleva el CO₂, que activa los receptores de calma en el tronco cerebral. Los tres juntos producen una relajación más profunda que las técnicas sin retención.',
+    steps:['Sentate o acostate cómodo','Ponés la lengua detrás de los dientes superiores (se mantiene así todo el tiempo)','Inhalá suave por la nariz · 4 segundos','Retené sin exhalar · 7 segundos','Exhalá completamente por la boca con un suave sonido · 8 segundos','Repetí. Con 5 minutos (≈15 ciclos) ya sentís el efecto'],
+    breath478:true },
+
   /* 🔥 FOCO */
   { id:'foco_monotarea', cat:'foco', ico:'🎯', title:'La regla de un solo foco', when:'Cuando saltás entre mil cosas y no avanzás en ninguna',
     intro:'Tu cerebro no hace dos cosas conscientes a la vez: la "multitarea" es saltar de una a otra perdiendo energía en cada salto. Elegir UNA sola cosa por bloque es lo que dispara la concentración profunda.',
@@ -929,6 +936,9 @@ function toolCardHTML(x){
       ${x.when?`<div class="row"><span class="whenTag">📍 Cuándo usarlo: ${x.when}</span></div>`:''}
       <div class="row"><div class="lbl">🔬 La ciencia detrás</div><p>${x.why}</p></div>
       <div class="row"><div class="lbl">Cómo se hace</div><ul class="steps">${x.steps.map((s,i)=>`<li class="${(db.tested[x.id]&&db.tested[x.id].steps&&db.tested[x.id].steps[i])?'on':''}" onclick="xStepTog('${x.id}',${i})"><span class="b">✓</span>${s}</li>`).join('')}</ul></div>
+      ${x.breath478?`<div class="orb-wrap"><div class="orb" id="orb_${x.id}" style="font-size:32px;font-weight:800">▶</div></div>
+      <p style="text-align:center;color:var(--muted);font-size:13px;margin:6px 0 10px" id="cue_${x.id}">Inhalá 4 · Retené 7 · Exhalá 8</p>
+      <div class="timer"><div class="num" id="tn_${x.id}">5:00</div><button id="btn478_${x.id}" onclick="start478('${x.id}')">Iniciar (5 min)</button><div class="hint">Seguí el orbe · el número es la cuenta regresiva</div></div>`:''}
       ${x.fields?`<div class="row"><div class="lbl">✍️ Tu espacio para escribir</div>
         <p class="saveHint">💾 Se guarda solo en este dispositivo. Podés cerrar y volver cuando quieras.</p>
         ${x.fields.map((f,i)=>`<label class="fieldLbl">${f}</label><textarea class="noteArea" rows="2" placeholder="Escribí acá..." oninput="noteSave('${x.id}',${i},this.value)">${(N[i]||'').replace(/</g,'&lt;')}</textarea>`).join('')}
@@ -975,6 +985,53 @@ function toggleRoutine(id,slot){
 function xStepTog(id,i){db.tested[id]=db.tested[id]||{steps:{}};db.tested[id].steps=db.tested[id].steps||{};db.tested[id].steps[i]=!db.tested[id].steps[i];DB.save(db);refreshTools()}
 function xTested(id){db.tested[id]=db.tested[id]||{steps:{}};db.tested[id].done=!db.tested[id].done;DB.save(db);if(db.tested[id].done)toast('🧰 Anotado. Buen experimento.');refreshTools()}
 function noteSave(id,i,v){if(typeof db.notes[id]!=='object'||db.notes[id]===null)db.notes[id]={};db.notes[id][i]=v;DB.save(db)}
+
+/* ---------- 4-7-8 breathing ---------- */
+const s478={};
+function start478(id){
+  const orb=document.getElementById('orb_'+id),cue=document.getElementById('cue_'+id),
+        num=document.getElementById('tn_'+id),btn=document.getElementById('btn478_'+id);
+  if(s478[id]){
+    s478[id].stopped=true;clearInterval(s478[id].iv);delete s478[id];
+    orb.style.transitionDuration='';orb.className='orb';orb.style.fontSize='32px';orb.textContent='▶';
+    cue.textContent='Inhalá 4 · Retené 7 · Exhalá 8';num.textContent='5:00';
+    if(btn)btn.textContent='Iniciar (5 min)';return;
+  }
+  const sess={stopped:false};s478[id]=sess;
+  if(btn)btn.textContent='Detener';
+  orb.style.fontSize='36px';
+  let elapsed=0;
+  sess.iv=setInterval(()=>{
+    if(sess.stopped)return;
+    elapsed++;const left=300-elapsed;num.textContent=fmt(left);
+    if(left<=0){
+      sess.stopped=true;clearInterval(sess.iv);delete s478[id];
+      orb.style.transitionDuration='';orb.className='orb';orb.style.fontSize='22px';orb.textContent='✓';
+      cue.textContent='5 minutos completos. Tu sistema nervioso lo agradeció. 🌿';
+      if(btn)btn.textContent='Iniciar (5 min)';
+      toast('🫁 Respiración 4-7-8 completa. Excelente.');
+    }
+  },1000);
+  function cd(secs,cls,dur,cueText,cb){
+    let n=secs;
+    orb.style.transitionDuration=dur;orb.className='orb '+cls;orb.textContent=n;cue.textContent=cueText;
+    const iv=setInterval(()=>{
+      if(sess.stopped){clearInterval(iv);return;}
+      n--;if(n<=0){clearInterval(iv);cb();}else orb.textContent=n;
+    },1000);
+  }
+  function cycle(){
+    if(sess.stopped)return;
+    cd(4,'in','4s','Inhalá por la nariz...',()=>{
+      if(sess.stopped)return;
+      cd(7,'hold','.3s','Retené...',()=>{
+        if(sess.stopped)return;
+        cd(8,'out','8s','Exhalá por la boca...',()=>cycle());
+      });
+    });
+  }
+  cycle();
+}
 
 /* ---------- nav ---------- */
 function go(s){
