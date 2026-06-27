@@ -1297,36 +1297,44 @@ function renderTestQ(){
   const total=TEST_Q.length;
   document.getElementById('testBar').style.width=Math.round(testStep/total*100)+'%';
   if(testStep>=total){renderTestResult();return;}
-  const q=TEST_Q[testStep],sel=testAnswers[q.id];
+  const q=TEST_Q[testStep];
+  const sel=testAnswers[q.id]||[];
   document.getElementById('testContent').innerHTML=`
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:700;letter-spacing:.5px">PREGUNTA ${testStep+1} DE ${total}</div>
     <div class="testQ">${q.q}</div>
-    ${q.sub?`<div class="testSub">${q.sub}</div>`:'<div style="height:10px"></div>'}
-    <div class="testOpts">${q.opts.map((o,i)=>`<button class="testOpt${sel===i?' sel':''}" onclick="selectTestOpt(${i})">${o.l}</button>`).join('')}</div>
+    <div class="testSub">${q.sub||'Podés elegir más de una opción.'}</div>
+    <div class="testOpts">${q.opts.map((o,i)=>`<button class="testOpt${sel.includes(i)?' sel':''}" onclick="selectTestOpt(${i})">${o.l}</button>`).join('')}</div>
     <div class="testNav">
       ${testStep>0?`<button class="tback" onclick="testBack()">← Atrás</button>`:''}
-      <button class="tnext" onclick="testNext()" ${sel===undefined?'disabled':''}>
+      <button class="tnext" onclick="testNext()" ${sel.length===0?'disabled':''}>
         ${testStep===total-1?'Ver mis herramientas →':'Siguiente →'}
       </button>
     </div>`;
 }
 function selectTestOpt(i){
-  testAnswers[TEST_Q[testStep].id]=i;
-  document.querySelectorAll('.testOpt').forEach((b,idx)=>b.classList.toggle('sel',idx===i));
-  document.querySelector('.tnext').disabled=false;
+  const id=TEST_Q[testStep].id;
+  testAnswers[id]=testAnswers[id]||[];
+  const idx=testAnswers[id].indexOf(i);
+  if(idx>=0) testAnswers[id].splice(idx,1);
+  else testAnswers[id].push(i);
+  document.querySelectorAll('.testOpt').forEach((b,idx)=>b.classList.toggle('sel',testAnswers[id].includes(idx)));
+  document.querySelector('.tnext').disabled=testAnswers[id].length===0;
 }
-function testNext(){if(testAnswers[TEST_Q[testStep].id]===undefined)return;testStep++;renderTestQ();}
+function testNext(){if((testAnswers[TEST_Q[testStep].id]||[]).length===0)return;testStep++;renderTestQ();}
 function testBack(){if(testStep>0){testStep--;renderTestQ();}}
 function computeTestRecs(){
   const score={};
-  TEST_Q.forEach(q=>{const i=testAnswers[q.id];if(i===undefined)return;q.opts[i].t.forEach(id=>{score[id]=(score[id]||0)+1;});});
+  TEST_Q.forEach(q=>{
+    const selected=testAnswers[q.id]||[];
+    selected.forEach(i=>{(q.opts[i]?.t||[]).forEach(id=>{score[id]=(score[id]||0)+1;});});
+  });
   return EXTRAS.map(t=>({t,s:score[t.id]||0})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,8).map(x=>x.t);
 }
 function renderTestResult(){
   document.getElementById('testBar').style.width='100%';
   const recs=computeTestRecs();
   const catScore={};
-  TEST_Q.forEach(q=>{const i=testAnswers[q.id];if(i===undefined)return;q.opts[i].t.forEach(id=>{const t=EXTRAS.find(e=>e.id===id);if(t&&t.cat)catScore[t.cat]=(catScore[t.cat]||0)+1;});});
+  TEST_Q.forEach(q=>{const sel=testAnswers[q.id]||[];sel.forEach(i=>{(q.opts[i]?.t||[]).forEach(id=>{const t=EXTRAS.find(e=>e.id===id);if(t&&t.cat)catScore[t.cat]=(catScore[t.cat]||0)+1;});});});
   const topCat=Object.entries(catScore).sort((a,b)=>b[1]-a[1])[0];
   const catLabel={calma:'calma y manejo del estrés',estiramiento:'movimiento y cuerpo',meditacion:'meditación',foco:'foco y productividad',relaciones:'relaciones',creencias:'mentalidad y creencias',sueno:'sueño y descanso',dinero:'finanzas y metas',metas:'metas',confianza:'confianza'};
   db.testProfile={answers:testAnswers,recs:recs.map(t=>t.id),date:todayKey};DB.save(db);
