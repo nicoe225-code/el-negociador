@@ -192,6 +192,42 @@
     border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600}
   .wCredit{text-align:center;color:var(--muted);font-size:12.5px;margin-top:20px;line-height:1.7}
   .wCredit b{color:var(--txt)}
+
+  /* ---- profile test overlay ---- */
+  .testOverlay{position:fixed;inset:0;z-index:50;overflow-y:auto;display:none;
+    background:radial-gradient(900px 500px at 50% -5%,#1b2742 0%,#0d1117 60%)}
+  .testOverlay.show{display:block;animation:fade .4s ease}
+  .testOverlay .inner{max-width:560px;margin:0 auto;padding:30px 22px 48px}
+  .testProgress{height:5px;background:var(--line);border-radius:3px;margin-bottom:28px}
+  .testProgress .bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .35s ease}
+  .testQ{font-size:20px;font-weight:800;line-height:1.3;margin:0 0 6px}
+  .testSub{font-size:13.5px;color:var(--muted);margin:0 0 20px}
+  .testOpts{display:flex;flex-direction:column;gap:10px}
+  .testOpt{border:1.5px solid var(--line);background:var(--card);color:var(--txt);padding:14px 16px;
+    border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:.15s;line-height:1.4}
+  .testOpt.sel{border-color:var(--accent);background:rgba(79,157,255,.15);color:var(--accent)}
+  .testNav{display:flex;gap:10px;margin-top:20px}
+  .testNav .tback{flex:0 0 auto;border:1px solid var(--line);background:var(--card2);color:var(--muted);
+    padding:12px 16px;border-radius:12px;font-size:14px;cursor:pointer}
+  .testNav .tnext{flex:1;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff;font-weight:800;padding:13px;border-radius:13px;font-size:15px;cursor:pointer}
+  .testNav .tnext:disabled{opacity:.35;cursor:not-allowed}
+  .recGrid{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+  .recCard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+  .recCard .ri{font-size:24px;flex:none}
+  .recCard .rt b{display:block;font-size:14px;margin-bottom:2px}
+  .recCard .rt small{color:var(--muted);font-size:12px;line-height:1.4;display:block}
+  .recCard .rt .rtag{display:inline-block;background:rgba(79,157,255,.14);color:var(--accent);font-size:11px;font-weight:700;border-radius:8px;padding:3px 8px;margin-top:5px}
+  .testBtnGo{width:100%;border:none;background:linear-gradient(135deg,var(--green),#2fae8a);
+    color:#04201a;font-weight:800;padding:14px;border-radius:13px;font-size:15px;cursor:pointer;margin-top:18px}
+  .testBtnRetry{width:100%;background:none;border:1px solid var(--line);color:var(--muted);
+    padding:12px;border-radius:12px;font-size:14px;cursor:pointer;margin-top:10px}
+
+  /* ---- overlap warning in routine ---- */
+  .overlapWarn{background:rgba(255,203,69,.08);border:1px solid rgba(255,203,69,.3);border-radius:12px;
+    padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.6;color:#f0d580}
+  .overlapWarn b{color:var(--gold)}
+
   .wHero{background:linear-gradient(135deg,rgba(79,157,255,.2),rgba(124,92,255,.2));
     border:1.5px solid var(--accent);border-radius:var(--r);padding:20px 18px;margin:0 0 24px;text-align:center;
     box-shadow:0 8px 30px rgba(79,157,255,.18)}
@@ -445,6 +481,11 @@
     <div id="catHome">
       <h1>¿Qué querés resolver hoy?</h1>
       <p class="sub">Elegí un tema y abrí tu caja de herramientas</p>
+      <button onclick="showTest()" style="width:100%;border:1.5px solid var(--accent2);background:rgba(124,92,255,.1);color:#b9a8ff;font-weight:700;padding:13px 16px;border-radius:14px;font-size:14px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <span style="font-size:22px">🧩</span>
+        <span style="flex:1"><b style="display:block">Test de perfil</b><span style="font-weight:400;font-size:12.5px;color:var(--muted)">7 preguntas → herramientas personalizadas para vos</span></span>
+        <span>→</span>
+      </button>
       <div class="catGrid" id="catGrid"></div>
     </div>
     <div id="toolView" style="display:none">
@@ -476,6 +517,18 @@
   </section>
 </div>
 
+<!-- ===== TEST DE PERFIL ===== -->
+<div class="testOverlay" id="testOverlay">
+  <div class="inner">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:13px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);font-weight:700">Test de Perfil</div>
+      <button onclick="closeTest()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div class="testProgress"><div class="bar" id="testBar" style="width:0%"></div></div>
+    <div id="testContent"></div>
+  </div>
+</div>
+
 <button class="sosFab" onclick="go('sos')">SOS</button>
 
 <nav>
@@ -501,7 +554,7 @@ db.wins = db.wins||[];
 db.tested = db.tested||{};
 db.notes = db.notes||{};
 db.routine = db.routine||{};db.routine.manana=db.routine.manana||[];db.routine.tarde=db.routine.tarde||[];db.routine.noche=db.routine.noche||[];
-let today = db.days[todayKey] = db.days[todayKey] || {state:null,cards:{},night:false};
+let today = db.days[todayKey] = db.days[todayKey] || {state:null,cards:{},night:false,routineDone:{}};
 function persist(){ db.days[todayKey]=today; DB.save(db) }
 
 /* ---------- cards (Plan Básico) ---------- */
@@ -513,7 +566,7 @@ const CARDS = [
     steps:['Pies al ancho de los hombros','Caderas hacia adelante','Hombros echados hacia atrás','Mentón un poco arriba','Codos separados del cuerpo (más separados = más fuerza)'],
     art:'<svg viewBox="0 0 240 285" role="img" xmlns="http://www.w3.org/2000/svg"><title>Postura de poder</title><desc>Persona de pie con piernas separadas y manos en la cintura.</desc><ellipse cx="120" cy="262" rx="62" ry="10" fill="#1b2330" opacity="0.16"/><path d="M104 168 H120 L118 250 H96 Z" fill="#3f6fc0"/><path d="M120 168 H136 L144 250 H122 Z" fill="#3f6fc0"/><rect x="84" y="245" width="34" height="15" rx="7" fill="#2c3852"/><rect x="122" y="245" width="34" height="15" rx="7" fill="#2c3852"/><path d="M102 156 H138 L140 170 H100 Z" fill="#34589c"/><path d="M94 104 Q120 96 146 104 L140 160 L100 160 Z" fill="#bcdcf7"/><path d="M98 110 L78 138" stroke="#bcdcf7" stroke-width="18" stroke-linecap="round" fill="none"/><path d="M142 110 L162 138" stroke="#bcdcf7" stroke-width="18" stroke-linecap="round" fill="none"/><path d="M78 138 L104 156" stroke="#f3c49b" stroke-width="13" stroke-linecap="round" fill="none"/><path d="M162 138 L136 156" stroke="#f3c49b" stroke-width="13" stroke-linecap="round" fill="none"/><circle cx="104" cy="156" r="7" fill="#f3c49b"/><circle cx="136" cy="156" r="7" fill="#f3c49b"/><rect x="112" y="86" width="16" height="18" rx="6" fill="#f3c49b"/><ellipse cx="120" cy="66" rx="24" ry="26" fill="#f3c49b"/><circle cx="96" cy="66" r="4.5" fill="#f3c49b"/><circle cx="144" cy="66" r="4.5" fill="#f3c49b"/><path d="M94 64 C90 32 150 32 146 64 C146 54 138 50 120 51 C102 50 94 54 94 64 Z" fill="#5b3b22"/><circle cx="111" cy="66" r="2.6" fill="#2c2c2c"/><circle cx="129" cy="66" r="2.6" fill="#2c2c2c"/><path d="M111 77 Q120 85 129 77" stroke="#2c2c2c" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>',
     timer:120 },
-  { id:'respira', ico:'🫁', title:'Respiración diafragmática', tag:'5 min · destrabá tu cabeza',
+  { id:'respira', ico:'🫁', title:'Respiración diafragmática', tag:'5 min · destrabá tu cabeza', group:'respiracion',
     intro:'La mayoría respira con el pecho, corto y rápido —y eso, sin que te des cuenta, le avisa a tu cerebro que hay peligro y te deja en modo "reacción". Respirar inflando la <b>panza</b> hace lo contrario: le dice "estás a salvo", y entonces tu cerebro devuelve la sangre a la parte que piensa con claridad (la que se apaga cuando estás estresado). Es, literalmente, el botón de apagado del estrés. Con 5 minutos alcanza, y es la base para poder concentrarte en serio.',
     why:'Respirar con el diafragma activa el sistema parasimpático (el del "descanso"). Tu cerebro necesita ~1,5 L de sangre para razonar bien; el estrés se la roba, y esto se la devuelve.',
     benefit:'Vuelve la claridad para pensar y decidir · baja pulsaciones',
@@ -785,7 +838,7 @@ const EXTRAS=[
     intro:'Antes de cada situación, tu cerebro le pone una "nota esperada" y después compara. Si esperabas un 10 y recibís un 8, te frustrás —¡aunque el 8 sea bueno! Bajar la expectativa <b>a propósito y de antemano</b> hace que disfrutes lo que venga. Cuando no esperás nada, cualquier cosa buena se siente enorme.',
     why:'El cerebro evalúa todo por comparación contra un punto de referencia que vos mismo inventaste. Ese punto, no la realidad, decide si algo te frustra o te alegra.',
     steps:['Date cuenta de qué "nota" estás esperando de esto','Bajala a propósito a un punto realista (no esperes el 10)','Recordá: sin expectativas, cualquier cosa linda se vuelve un regalo'] },
-  { id:'mindfulness', ico:'🧘', title:'Mindfulness express (atención plena)', when:'Cuando estás disperso, acelerado o con la cabeza en mil cosas',
+  { id:'mindfulness', ico:'🧘', group:'meditacion', title:'Mindfulness express (atención plena)', when:'Cuando estás disperso, acelerado o con la cabeza en mil cosas',
     intro:'Mindfulness es simplemente <b>prestar atención plena al ahora</b>, sin juzgar. Tu mente vive saltando al pasado o al futuro, y eso genera ruido y ansiedad. Traerla al presente —a tu respiración, a lo que ves y escuchás— calma ese ruido. No necesitás incienso ni media hora: con 3 a 5 minutos cuando lo necesitás, alcanza. Un detalle clave: primero respirá tranquilo, porque no se puede prestar atención en calma si el cuerpo está en alerta.',
     why:'La atención es el proceso más importante de tu mente: lo que atendés define tu realidad. Entrenarla reduce la ansiedad y te saca del "piloto automático". Por eso primero hay que activar el sistema de calma con la respiración.',
     steps:['Sentate cómodo y hacé 3 respiraciones lentas inflando la panza','Llevá toda tu atención a cómo entra y sale el aire','Cuando tu mente se vaya (y se va a ir), traela de vuelta sin retarte','Nombrá 5 cosas que ves, 4 que escuchás, 3 que sentís en el cuerpo','Quedate 1-2 minutos solo observando, sin hacer nada más'] },
@@ -858,7 +911,7 @@ const EXTRAS=[
     steps:['Frená antes de hablar (respirá)','Empezá con "Yo siento / Yo noto..." en vez de "Vos..."','Contá el hecho concreto, sin etiquetas','Pedí lo que necesitás en positivo'] },
 
   /* 🧘 CALMA */
-  { id:'relajacion_alfa', cat:'calma', ico:'🌀', title:'Relajación profunda (estado Alfa)', when:'Para calmarte fuerte, o como paso previo a visualizar',
+  { id:'relajacion_alfa', cat:'calma', ico:'🌀', group:'relajacion', title:'Relajación profunda (estado Alfa)', when:'Para calmarte fuerte, o como paso previo a visualizar',
     intro:'El método Silva entrena entrar en un estado de relajación profunda (ondas "alfa"), donde la mente se calma y se vuelve más receptiva. Es la puerta de entrada para visualizar y reprogramar. No es magia: es bajar tu cuerpo a "modo descanso" a propósito.',
     why:'Coincide con la "respuesta de relajación" de Herbert Benson (Harvard): baja pulsaciones, presión y cortisol al activar el sistema parasimpático.',
     steps:['Sentate o acostate con los ojos cerrados','Respirá lento inflando la panza, 10 veces','Contá de 10 a 1, bajando un escalón con cada número','En el 1, imaginá tu lugar tranquilo','Quedate 2-3 min; desde acá podés visualizar tu meta'] },
@@ -868,7 +921,7 @@ const EXTRAS=[
     steps:['Primero entrá en calma con "Relajación profunda (estado Alfa)"','Ya relajado, juntá las puntas del pulgar, índice y mayor de una mano','Quedate ahí sintiendo la calma; repetí el gesto 3-4 veces en esa sesión','Hacelo varios días seguidos para grabar la asociación (sin repetición no prende)','En la situación real: juntá los 3 dedos + una respiración lenta para disparar el estado'],
     art:'<svg viewBox="0 0 240 285" role="img" xmlns="http://www.w3.org/2000/svg"><title>Ancla de los 3 dedos</title><desc>Una mano con el pulgar, el indice y el mayor juntos por las puntas.</desc><ellipse cx="120" cy="264" rx="40" ry="8" fill="#1b2330" opacity="0.12"/><rect x="98" y="214" width="44" height="30" rx="12" fill="#bcdcf7"/><rect x="104" y="182" width="32" height="40" rx="14" fill="#f3c49b"/><ellipse cx="120" cy="172" rx="28" ry="30" fill="#f3c49b"/><path d="M107 166 L116 96" stroke="#f3c49b" stroke-width="15" stroke-linecap="round" fill="none"/><path d="M120 166 L120 90" stroke="#f3c49b" stroke-width="15" stroke-linecap="round" fill="none"/><path d="M133 166 L124 96" stroke="#f3c49b" stroke-width="15" stroke-linecap="round" fill="none"/><circle cx="120" cy="92" r="9" fill="#f3c49b"/></svg>' },
 
-  { id:'respira478', cat:'calma', ico:'🫁', title:'Respiración 4-7-8', when:'Para dormir mejor, bajar ansiedad intensa o calmarte antes de algo estresante',
+  { id:'respira478', cat:'calma', ico:'🫁', group:'respiracion', title:'Respiración 4-7-8', when:'Para dormir mejor, bajar ansiedad intensa o calmarte antes de algo estresante',
     intro:'El Dr. Andrew Weil la llama el <b>tranquilizante natural del sistema nervioso</b>. Inhalás 4 segundos, retenés 7 y exhalás lento 8. La retención y la exhalación larga activan el sistema parasimpático (el "modo calma") de forma más profunda que cualquier otra técnica. Usada antes de dormir, reduce el tiempo que tardás en quedarte dormido. 5 minutos alcanzan.',
     why:'La exhalación prolongada (más que la inhalación) estimula el nervio vago y baja la frecuencia cardíaca. La retención eleva el CO₂, que activa los receptores de calma en el tronco cerebral. Los tres juntos producen una relajación más profunda que las técnicas sin retención.',
     steps:['Sentate o acostate cómodo','Ponés la lengua detrás de los dientes superiores (se mantiene así todo el tiempo)','Inhalá suave por la nariz · 4 segundos','Retené sin exhalar · 7 segundos','Exhalá completamente por la boca con un suave sonido · 8 segundos','Repetí. Con 5 minutos (≈15 ciclos) ya sentís el efecto'],
@@ -882,9 +935,91 @@ const EXTRAS=[
   { id:'activar_energia', cat:'foco', ico:'🔋', title:'Subir la energía (activación)', when:'Cuando estás con sueño, pesado o sin ganas (después de comer, una siesta o media tarde)',
     intro:'Ese bajón es normal: después de comer o de una siesta corta, el cuerpo queda en "modo descanso" (se llama inercia del sueño). El truco no es forzarte con fuerza de voluntad, es <b>mandarle a tu cuerpo la señal opuesta</b>: movimiento, respiración rápida, luz y un poco de frío te activan en 2-3 minutos. Es pura química, no carácter.',
     why:'La respiración rápida y el movimiento breve activan el sistema nervioso simpático y liberan adrenalina y noradrenalina, que suben el estado de alerta (es lo contrario del suspiro que calma). La luz fuerte corta la melatonina y el frío dispara noradrenalina.',
-    steps:['Parate y movete 1-2 min: saltos, sentadillas o caminar rápido','Respiración activadora: 20-30 respiraciones rápidas y profundas (si te mareás, frená)','Buscá luz fuerte: salí al sol o ponete frente a una ventana','Mojate la cara o la nuca con agua fría (o un trago de agua bien fría)','Postura de poder 30 seg y decite: "tengo energía para esto"'] }
+    steps:['Parate y movete 1-2 min: saltos, sentadillas o caminar rápido','Respiración activadora: 20-30 respiraciones rápidas y profundas (si te mareás, frená)','Buscá luz fuerte: salí al sol o ponete frente a una ventana','Mojate la cara o la nuca con agua fría (o un trago de agua bien fría)','Postura de poder 30 seg y decite: "tengo energía para esto"'] },
+
+  /* 🤸 ESTIRAMIENTO */
+  { id:'estira_manana', cat:'estiramiento', ico:'🌅', group:'estira_manana', title:'Estiramiento matutino completo', when:'A la mañana, al levantarte · 5 min',
+    intro:'Al despertar, tu cuerpo lleva horas sin moverse y los músculos están acortados. Unos minutos de estiramiento suave aumentan la circulación, bajan la rigidez y le mandan a tu cerebro la señal de que el día empieza. No hace falta ser flexible: hacelo suave, sin forzar.',
+    why:'El movimiento matutino activa el sistema nervioso simpático, aumenta el flujo sanguíneo y libera endorfinas. El estiramiento reduce la tensión muscular acumulada durante el sueño y mejora la postura para el resto del día.',
+    benefit:'Más energía al despertar · menos rigidez · mejor postura todo el día',
+    steps:['Rota suave el cuello: oreja al hombro, 10 seg cada lado','Entrelazá las manos sobre la cabeza y estirá hacia arriba, 10 seg','Llevá un brazo al pecho y sostené 10 seg cada lado (hombros)','Inclinación lateral: brazo sobre la cabeza hacia el lado opuesto, 10 seg cada lado','Sentado, llevá las rodillas al pecho suave, 15 seg','Parado, inclinate hacia adelante colgando los brazos, 15-20 seg'],
+    timer:300 },
+  { id:'estira_cuello', cat:'estiramiento', ico:'💆', group:'estira_cuello', title:'Cuello y hombros (anti-tensión)', when:'Mañana, tarde o noche · tras horas en pantalla o bajo estrés',
+    intro:'El cuello y los hombros son donde el cuerpo guarda el estrés. Si trabajás mucho en pantalla o tenés días cargados, la tensión se instala ahí sin que la notes y puede generar dolores de cabeza y rigidez. Este estiramiento de 3 minutos la disuelve.',
+    why:'El estrés crónico contrae el trapecio y el esternocleidomastoideo. Estirar esa zona mejora la circulación al cerebro y activa el nervio vago, bajando el cortisol.',
+    benefit:'Alivia tensión · reduce dolores de cabeza · mejora el foco',
+    steps:['Sentate derecho, hombros relajados','Llevá la oreja derecha al hombro derecho suave, 15 seg; repetí al otro lado','Girá el cuello mirando el hombro derecho, 10 seg; repetí al otro lado','Elevá los hombros hacia las orejas, sostené 3 seg y soltá. Repetí 5 veces','Entrelazá los dedos detrás de la cabeza, empujá suave hacia abajo, 10 seg','Rotá los hombros hacia atrás, 10 veces lentas'] },
+  { id:'estira_espalda', cat:'estiramiento', ico:'🦴', group:'estira_espalda', title:'Espalda y columna', when:'Mañana, tarde o noche · tras horas sentado o de pie',
+    intro:'Horas sentado acortan los flexores de la cadera y tensan la espalda baja. Este estiramiento alivia la compresión vertebral y mejora la postura. Especialmente útil si pasás mucho tiempo en silla o auto.',
+    why:'La espalda baja soporta el peso del cuerpo durante horas. Estirarla mejora la alineación vertebral, reduce la compresión discal y activa el sistema nervioso parasimpático.',
+    benefit:'Alivia dolor de espalda · mejora postura · reduce tensión lumbar',
+    steps:['Parado, pies al ancho de hombros, inclinate hacia adelante suave colgando los brazos, 20 seg','Acostate y llevá las rodillas al pecho, balanceá suave, 20 seg','Postura del niño: rodillas en el piso, brazos estirados al frente sobre el piso, 30 seg','Giro de columna: sentado, girá el torso suave hacia cada lado, 10-15 seg','Estiramiento de cadera: una rodilla en el piso, otra pierna adelante, empujá la cadera hacia adelante, 15 seg cada lado'] },
+  { id:'estira_piernas', cat:'estiramiento', ico:'🦵', group:'estira_piernas', title:'Piernas y caderas', when:'Tarde o noche · tras actividad física o mucho tiempo sentado',
+    intro:'Las piernas y caderas acumulan tensión después de estar mucho tiempo en una posición o tras ejercicio. Este estiramiento mejora la circulación, baja la tensión muscular y prepara el cuerpo para descansar.',
+    why:'Los músculos de piernas y caderas son los más grandes del cuerpo. Estirarlos mejora el retorno venoso, reduce la tensión y libera endorfinas.',
+    benefit:'Mejora circulación · reduce tensión · prepara para el descanso',
+    steps:['Cuádriceps: parado, doblá una rodilla y agarrá el pie por detrás, 15-20 seg cada lado','Isquiotibiales: sentado, estirá una pierna y alcanzá el pie suave, 20 seg cada lado','Postura del 4: sentado, cruzá un tobillo sobre la rodilla opuesta y empujá suave la rodilla, 20 seg cada lado','Pantorrillas: parado frente a una pared, un pie adelante, talón trasero en el piso, 15 seg cada lado','Mariposa: sentado, plantas de los pies juntas, dejá caer las rodillas suave hacia afuera, 20-30 seg'] },
+  { id:'estira_noche', cat:'estiramiento', ico:'🌙', group:'estira_noche', title:'Estiramiento para dormir', when:'Por la noche, 15-30 min antes de acostarte',
+    intro:'El estiramiento suave antes de dormir le indica al cuerpo que es hora de bajar las revoluciones. Combinado con respiración lenta, baja el cortisol y activa el sistema nervioso parasimpático. No es para esforzarse: es para soltar.',
+    why:'El estiramiento suave nocturno activa el sistema parasimpático y baja el tono muscular, dos señales clave para que el cerebro inicie el ciclo del sueño. Es la transición más natural del día al descanso.',
+    benefit:'Facilita el sueño · baja la tensión del día · mejora la calidad del descanso',
+    steps:['Postura del niño: rodillas en el piso, brazos estirados al frente, 30 seg, respirando lento','Torsión de columna: acostate, llevá una rodilla al lado contrario, 20 seg cada lado','Abrazo de rodillas: acostate y llevá ambas rodillas al pecho, balanceá suave, 20 seg','Cuello suave: oreja al hombro, 15 seg cada lado','Postura final: acostate boca arriba, brazos a los costados, ojos cerrados, respirá lento 2 min'],
+    timer:300 },
+
+  /* 🧘 MEDITACIÓN */
+  { id:'meditacion_noche', cat:'meditacion', ico:'🌌', group:'meditacion', title:'Meditación de cierre del día', when:'Por la noche, antes de dormir · 5-10 min',
+    intro:'Una meditación breve para hacer la transición del día activo al descanso. No es vaciar la mente (eso es imposible): es observar los pensamientos sin engancharte en ellos, y llevar la atención al cuerpo. El día se cierra, el sistema nervioso baja.',
+    why:'La meditación nocturna activa el sistema parasimpático, baja el cortisol y facilita la transición al sueño. Estudios muestran que 5-10 minutos antes de dormir mejoran la calidad del sueño de forma medible.',
+    benefit:'Facilita el sueño · procesa el día · baja el cortisol',
+    steps:['Acostate o sentate cómodo, ojos cerrados','Hacé 5 respiraciones lentas: inhalá contando 4, exhalá contando 6','Escaneá el cuerpo de pies a cabeza: ¿dónde sentís tensión? Solo notá, sin forzar','Pensá en 1 cosa del día que salió bien, aunque sea pequeña','Dejá ir los pendientes: los retomás mañana. Por ahora, solo existís','Seguí con la respiración lenta hasta quedarte dormido o por 5-10 minutos'],
+    timer:600 },
+  { id:'meditacion_manana', cat:'meditacion', ico:'☀️', group:'meditacion', title:'Meditación de inicio de día', when:'A la mañana, antes de empezar · 5 min',
+    intro:'5 minutos de quietud antes de empezar el día calibran tu cerebro para responder en vez de reaccionar. No necesitás experiencia previa. Es simplemente sentarte, respirar y notar lo que hay.',
+    why:'Meditar a la mañana activa la corteza prefrontal (la que piensa con claridad) y baja la activación de la amígdala (la que reacciona). Empieza el día desde la respuesta, no desde el impulso.',
+    benefit:'Más claridad · menos reactividad · mejor toma de decisiones',
+    steps:['Sentate cómodo, espalda recta, ojos cerrados','Hacé 5 respiraciones profundas (inflá la panza)','Llevá la atención al sonido de tu respiración','Cuando un pensamiento aparezca, notaló y volvé al aire sin retarte','Quedate 5 minutos: lo que importa es volver, no no-irte','Terminá con 1 intención para el día: "hoy quiero..."'],
+    timer:300 },
+  { id:'meditacion_scan', cat:'meditacion', ico:'🔍', group:'meditacion_scan', title:'Escaneo corporal (Body Scan)', when:'A cualquier hora cuando sentís tensión · ideal antes de dormir',
+    intro:'El escaneo corporal es una meditación donde pasás la atención por cada parte del cuerpo, notando lo que sentís sin intentar cambiarlo. Es uno de los ejercicios más efectivos para soltar la tensión física acumulada por el estrés.',
+    why:'La tensión física y el estrés emocional son inseparables. Llevar la atención consciente a cada zona del cuerpo activa el sistema parasimpático y libera tensión muscular sin ningún esfuerzo físico.',
+    benefit:'Libera tensión física · baja el estrés · mejora la conciencia corporal',
+    steps:['Acostate boca arriba, brazos a los costados','Hacé 3 respiraciones lentas y profundas','Llevá la atención a los pies: ¿calor, tensión, hormigueo? Solo observá','Subí lentamente: tobillos, pantorrillas, rodillas, muslos, cadera','Continuá: vientre, pecho, espalda, hombros, brazos, manos','Cuello, cara, cabeza: notá cada zona sin juzgar','Si hay tensión en algún lugar, inhalá y al exhalar imaginate que se suelta'],
+    timer:600 }
 ];
 const TOOLCAT={miedo:'relaciones',sonrisa:'confianza',difusion:'creencias',placer:'calma',expectativas:'calma',mindfulness:'calma',precompe:'confianza'};
+
+/* Horarios recomendados para cada herramienta */
+const TOOL_SLOTS={
+  /* plan básico — mañana */
+  postura:['manana'],respira:['manana'],tareas:['manana'],luz:['manana'],energia:['manana'],
+  /* tarde */
+  recarga:['tarde'],
+  /* extras — confianza / relaciones */
+  miedo:['tarde'],sonrisa:['manana','tarde'],precompe:['manana','tarde'],
+  escucha_activa:['tarde'],mensaje_yo:['tarde'],
+  /* mente / creencias */
+  difusion:['tarde','noche'],placer:['tarde','noche'],expectativas:['manana','tarde'],
+  creencia_reescribir:['manana','noche'],afirmacion_identidad:['manana','noche'],
+  /* metas / dinero */
+  objetivo_definido:['manana'],visualizacion:['manana','noche'],
+  dinero_historia:['manana','tarde'],dinero_meta:['manana'],dinero_abundancia:['manana','noche'],
+  /* calma */
+  mindfulness:['manana','tarde','noche'],relajacion_alfa:['manana','tarde','noche'],
+  ancla_3dedos:['manana','tarde','noche'],respira478:['tarde','noche'],
+  /* foco */
+  foco_monotarea:['manana','tarde'],activar_energia:['manana','tarde'],
+  /* sueño */
+  sueno_programar:['noche'],sueno_respiracion:['noche'],
+  apagar_pantallas:['noche'],leer_dormir:['noche'],
+  /* estiramiento */
+  estira_manana:['manana'],estira_cuello:['manana','tarde','noche'],
+  estira_espalda:['manana','tarde','noche'],estira_piernas:['tarde','noche'],
+  estira_noche:['noche'],
+  /* meditación */
+  meditacion_manana:['manana'],meditacion_noche:['noche'],
+  meditacion_scan:['tarde','noche']
+};
+const SLOT_LABEL={manana:'☀️ Mañana',tarde:'🌤️ Tarde',noche:'🌙 Noche'};
 const CATS=[
   {id:'dinero',ico:'💰',name:'Tu relación con el dinero',desc:'Reescribí tu historia con la plata y definí tu meta'},
   {id:'creencias',ico:'🚫',name:'Creencias limitantes',desc:'Detectá y cambiá las frases que te frenan'},
@@ -893,7 +1028,9 @@ const CATS=[
   {id:'sueno',ico:'😴',name:'Sueño y descanso',desc:'Dormí mejor y aprovechá la noche'},
   {id:'relaciones',ico:'❤️',name:'Relaciones',desc:'Comunicá mejor y desarmá conflictos'},
   {id:'calma',ico:'🧘',name:'Calma y ansiedad',desc:'Bajá el estrés y la mente acelerada'},
-  {id:'foco',ico:'🔥',name:'Foco y rendimiento',desc:'Concentración profunda y energía'}
+  {id:'foco',ico:'🔥',name:'Foco y rendimiento',desc:'Concentración profunda y energía'},
+  {id:'estiramiento',ico:'🤸',name:'Estiramiento y movimiento',desc:'Soltá la tensión del cuerpo — mañana, tarde o noche'},
+  {id:'meditacion',ico:'🧘',name:'Meditación',desc:'Calma profunda y presencia para cualquier momento del día'}
 ];
 function toolsOf(catId){return EXTRAS.filter(x=>(x.cat||TOOLCAT[x.id])===catId)}
 let currentCat=null;
@@ -921,45 +1058,59 @@ function closeCategory(){
   document.getElementById('catHome').style.display='block';
   renderCategories();window.scrollTo(0,0);
 }
-function toolCardHTML(x){
-  const tested=!!(db.tested[x.id]&&db.tested[x.id].done);
+function toolCardHTML(x, routineSlot){
+  // When shown in a routine: track daily completion (resets each day)
+  // When shown in category view: track global "tested/learned" state
+  const inRoutine = !!routineSlot;
+  const done = inRoutine
+    ? !!(today.routineDone && today.routineDone[routineSlot] && today.routineDone[routineSlot][x.id])
+    : !!(db.tested[x.id]&&db.tested[x.id].done);
+  const doneHandler = inRoutine
+    ? `rtnMarkDone('${x.id}','${routineSlot}')`
+    : `xTested('${x.id}')`;
   const N=(db.notes[x.id]&&typeof db.notes[x.id]==='object')?db.notes[x.id]:{};
-  return `<div class="card${tested?' done':''}">
-    <div class="cardHead" onclick="toggleCard('tc_${x.id}',event)">
+  const stepsDone = inRoutine
+    ? (today.routineDone&&today.routineDone[routineSlot]&&today.routineDone[routineSlot][x.id+'_s'])||{}
+    : (db.tested[x.id]&&db.tested[x.id].steps)||{};
+  const stepHandler = inRoutine
+    ? `rtnStepTog('${x.id}','${routineSlot}'`
+    : `xStepTog('${x.id}'`;
+  return `<div class="card${done?' done':''}">
+    <div class="cardHead" onclick="toggleCard('tc_${x.id}${routineSlot||''}',event)">
       <div class="ico">${x.ico}</div>
-      <div class="t"><b>${x.title}</b><small>${tested?'ya lo probaste ✓':'tocá para abrir'}</small></div>
+      <div class="t"><b>${x.title}</b><small>${done?(inRoutine?'✓ Hecho hoy':'✓ Aprendida'):(inRoutine?'tocá para abrir':'tocá para abrir')}</small></div>
       <div class="chk">✓</div>
     </div>
     <div class="body">
       <div class="intro">${x.intro}</div>
       ${x.art?`<div class="artBox">${x.art}</div>`:''}
-      ${x.when?`<div class="row"><span class="whenTag">📍 Cuándo usarlo: ${x.when}</span></div>`:''}
+      ${x.when?`<div class="row"><span class="whenTag">📍 Cuándo: ${x.when}</span></div>`:''}
       <div class="row"><div class="lbl">🔬 La ciencia detrás</div><p>${x.why}</p></div>
-      <div class="row"><div class="lbl">Cómo se hace</div><ul class="steps">${x.steps.map((s,i)=>`<li class="${(db.tested[x.id]&&db.tested[x.id].steps&&db.tested[x.id].steps[i])?'on':''}" onclick="xStepTog('${x.id}',${i})"><span class="b">✓</span>${s}</li>`).join('')}</ul></div>
+      ${x.benefit?`<div class="row"><span class="benefit">${x.benefit}</span></div>`:''}
+      <div class="row"><div class="lbl">Cómo se hace</div><ul class="steps">${x.steps.map((s,i)=>`<li class="${stepsDone[i]?'on':''}" onclick="${stepHandler},${i})"><span class="b">✓</span>${s}</li>`).join('')}</ul></div>
+      ${x.timer&&!x.breath478?`<div class="timer"><div class="num" id="tn_${x.id}${routineSlot||''}">${fmt(x.timer)}</div><button onclick="startTimer('${x.id}${routineSlot||''}',${x.timer},false)">Iniciar</button><div class="hint">${fmt(x.timer)} · seguí los pasos</div></div>`:''}
       ${x.breath478?`<div class="orb-wrap"><div class="orb" id="orb_${x.id}" style="font-size:32px;font-weight:800">▶</div></div>
       <p style="text-align:center;color:var(--muted);font-size:13px;margin:6px 0 10px" id="cue_${x.id}">Inhalá 4 · Retené 7 · Exhalá 8</p>
       <div class="timer"><div class="num" id="tn_${x.id}">5:00</div><button id="btn478_${x.id}" onclick="start478('${x.id}')">Iniciar (5 min)</button><div class="hint">Seguí el orbe · el número es la cuenta regresiva</div></div>`:''}
-      ${x.fields?`<div class="row"><div class="lbl">✍️ Tu espacio para escribir</div>
+      ${x.fields&&!inRoutine?`<div class="row"><div class="lbl">✍️ Tu espacio para escribir</div>
         <p class="saveHint">💾 Se guarda solo en este dispositivo. Podés cerrar y volver cuando quieras.</p>
         ${x.fields.map((f,i)=>`<label class="fieldLbl">${f}</label><textarea class="noteArea" rows="2" placeholder="Escribí acá..." oninput="noteSave('${x.id}',${i},this.value)">${(N[i]||'').replace(/</g,'&lt;')}</textarea>`).join('')}
       </div>`:''}
-      <button class="btnDone ${tested?'is-done':''}" onclick="xTested('${x.id}')">${tested?(x.fields?'✓ Hecho y guardado':'✓ Probado durante la prueba'):(x.fields?'Marcar como hecho':'Marcar como probado')}</button>
-      ${x.fields?`<p class="doneHint${tested?' ok':''}">${tested?'✓ Listo. Lo que escribiste queda guardado acá. Cuando vuelvas a esta herramienta vas a verlo, y podés actualizarlo cuando quieras.':'Escribí lo que puedas (no hace falta llenar todo de una). Cuando termines, tocá "Marcar como hecho". Podés volver a editarlo otro día.'}</p>`:''}
-      <div class="routineCtl">
-        <span class="routineLbl">¿La vas a hacer seguido? Sumala a tu rutina diaria:</span>
+      <button class="btnDone ${done?'is-done':''}" onclick="${doneHandler}">${done?'✓ Hecho':'Marcar como hecho'}</button>
+      ${!inRoutine?`<div class="routineCtl">
+        ${(()=>{const rs=TOOL_SLOTS[x.id]||[];return rs.length?`<div style="margin-bottom:8px;font-size:12.5px;color:var(--muted)">📅 Mejor momento: <span style="color:var(--txt);font-weight:600">${rs.map(s=>SLOT_LABEL[s]).join(' · ')}</span></div>`:'';})()}
+        <span class="routineLbl">¿La vas a hacer seguido? Sumala a tu rutina:</span>
         <div class="slotBtns">
-          <button class="${inSlot(x.id,'manana')?'on':''}" onclick="toggleRoutine('${x.id}','manana')">☀️ Mañana</button>
-          <button class="${inSlot(x.id,'tarde')?'on':''}" onclick="toggleRoutine('${x.id}','tarde')">🌤️ Tarde</button>
-          <button class="${inSlot(x.id,'noche')?'on':''}" onclick="toggleRoutine('${x.id}','noche')">🌙 Noche</button>
+          ${['manana','tarde','noche'].map(s=>{const rec=(TOOL_SLOTS[x.id]||[]).includes(s);const on=inSlot(x.id,s);return`<button class="${on?'on':''}" style="${rec&&!on?'border-color:rgba(79,157,255,.5);':''}" onclick="toggleRoutine('${x.id}','${s}')">${SLOT_LABEL[s]}${rec?' ★':''}</button>`;}).join('')}
         </div>
-      </div>
+      </div>`:''}
     </div>
   </div>`;
 }
-function paintTools(wrap,tools){
+function paintTools(wrap,tools,routineSlot){
   if(!wrap)return;
   const op=[...wrap.querySelectorAll('.card')].map(c=>c.classList.contains('open'));
-  wrap.innerHTML=tools.map(toolCardHTML).join('');
+  wrap.innerHTML=tools.map(t=>toolCardHTML(t,routineSlot)).join('');
   [...wrap.querySelectorAll('.card')].forEach((c,i)=>{if(op[i])c.classList.add('open')});
 }
 function renderTools(catId){currentCat=catId;paintTools(document.getElementById('toolCards'),toolsOf(catId));}
@@ -968,11 +1119,61 @@ function renderRoutine(slot){
   const wrap=document.getElementById('routine_'+slot);if(!wrap)return;
   const tools=routineTools(slot);
   if(!tools.length){wrap.innerHTML='<p class="routineEmpty">Todavía no sumaste herramientas acá. Entrá a 🧰 Resolver, abrí una herramienta y tocá el momento del día para sumarla a tu rutina.</p>';return;}
-  paintTools(wrap,tools);
+  const warns=detectOverlaps(slot,tools);
+  const warnHTML=warns.length?`<div class="overlapWarn">⚠️ ${warns.join('<br>⚠️ ')}</div>`:'';
+  const op=[...wrap.querySelectorAll('.card')].map(c=>c.classList.contains('open'));
+  wrap.innerHTML=warnHTML+tools.map(t=>toolCardHTML(t,slot)).join('');
+  [...wrap.querySelectorAll('.card')].forEach((c,i)=>{if(op[i])c.classList.add('open')});
 }
 function refreshTools(){
   if(currentCat)paintTools(document.getElementById('toolCards'),toolsOf(currentCat));
   ['manana','tarde','noche'].forEach(s=>renderRoutine(s));
+}
+
+/* routine daily tracking */
+function rtnMarkDone(id,slot){
+  today.routineDone=today.routineDone||{};
+  today.routineDone[slot]=today.routineDone[slot]||{};
+  today.routineDone[slot][id]=!today.routineDone[slot][id];
+  persist();
+  if(today.routineDone[slot][id])toast('✓ Hecho hoy. ¡Buen dos!');
+  renderRoutine(slot);
+}
+function rtnStepTog(id,slot,i){
+  today.routineDone=today.routineDone||{};
+  today.routineDone[slot]=today.routineDone[slot]||{};
+  const key=id+'_s';
+  today.routineDone[slot][key]=today.routineDone[slot][key]||{};
+  today.routineDone[slot][key][i]=!today.routineDone[slot][key][i];
+  persist();renderRoutine(slot);
+}
+
+/* overlap detection */
+function detectOverlaps(slot,tools){
+  const warns=[];
+  const groups={};
+  tools.forEach(t=>{
+    if(t.group){
+      if(groups[t.group]){
+        warns.push(`<b>${groups[t.group].title}</b> y <b>${t.title}</b> cubren lo mismo (${groupLabel(t.group)}). ¿Las hacés las dos o elegís una?`);
+      } else groups[t.group]=t;
+    }
+  });
+  if(slot==='manana'){
+    CARDS.forEach(card=>{
+      if(card.group){
+        tools.forEach(t=>{
+          if(t.group===card.group){
+            warns.push(`<b>${t.title}</b> (tu rutina) y <b>${card.title}</b> (Plan Básico) son similares. Podés reemplazar una por la otra, o hacerlas las dos si tenés tiempo.`);
+          }
+        });
+      }
+    });
+  }
+  return warns;
+}
+function groupLabel(g){
+  return {respiracion:'respiración',relajacion:'relajación profunda',meditacion:'meditación',meditacion_scan:'escaneo corporal',estira_manana:'estiramiento matutino',estira_cuello:'cuello/hombros',estira_espalda:'espalda',estira_piernas:'piernas',estira_noche:'estiramiento nocturno'}[g]||g;
 }
 function inSlot(id,slot){return (db.routine[slot]||[]).indexOf(id)>=0;}
 function toggleRoutine(id,slot){
@@ -983,7 +1184,7 @@ function toggleRoutine(id,slot){
   DB.save(db);refreshTools();
 }
 function xStepTog(id,i){db.tested[id]=db.tested[id]||{steps:{}};db.tested[id].steps=db.tested[id].steps||{};db.tested[id].steps[i]=!db.tested[id].steps[i];DB.save(db);refreshTools()}
-function xTested(id){db.tested[id]=db.tested[id]||{steps:{}};db.tested[id].done=!db.tested[id].done;DB.save(db);if(db.tested[id].done)toast('🧰 Anotado. Buen experimento.');refreshTools()}
+function xTested(id){db.tested[id]=db.tested[id]||{steps:{}};db.tested[id].done=!db.tested[id].done;DB.save(db);if(db.tested[id].done)toast('✓ Hecho. Sumado a tu historial.');refreshTools()}
 function noteSave(id,i,v){if(typeof db.notes[id]!=='object'||db.notes[id]===null)db.notes[id]={};db.notes[id][i]=v;DB.save(db)}
 
 /* ---------- 4-7-8 breathing ---------- */
@@ -1031,6 +1232,115 @@ function start478(id){
     });
   }
   cycle();
+}
+
+/* ---------- PROFILE TEST ---------- */
+const TEST_Q=[
+  {id:'desafio',q:'¿Cuál es tu mayor desafío diario?',sub:'Elegí el que más te pesa ahora mismo',
+   opts:[
+    {l:'😰 Ansiedad o estrés constante',t:['respira478','mindfulness','relajacion_alfa','estira_cuello','meditacion_noche','ancla_3dedos']},
+    {l:'🎯 Falta de foco o productividad',t:['foco_monotarea','objetivo_definido','activar_energia','afirmacion_identidad']},
+    {l:'👥 Relaciones o comunicación difíciles',t:['mensaje_yo','escucha_activa','difusion','expectativas']},
+    {l:'🤔 Baja confianza o creencias limitantes',t:['creencia_reescribir','afirmacion_identidad','precompe','sonrisa']},
+    {l:'😴 Mal sueño o poca energía',t:['sueno_respiracion','apagar_pantallas','meditacion_noche','estira_noche','leer_dormir']},
+    {l:'💰 Finanzas o metas de vida',t:['dinero_meta','objetivo_definido','dinero_abundancia','visualizacion']}
+  ]},
+  {id:'presion',q:'¿Cómo reaccionás cuando algo te estresa o presiona?',sub:'Sin juzgarte, ¿cuál es tu patrón más común?',
+   opts:[
+    {l:'🧊 Me paralizo, evito o procrastino',t:['difusion','relajacion_alfa','creencia_reescribir','foco_monotarea']},
+    {l:'🔥 Exploto o reacciono sin pensar',t:['mensaje_yo','escucha_activa','respira478','ancla_3dedos']},
+    {l:'😟 Me pongo muy ansioso y me cuesta calmarlo',t:['respira478','mindfulness','relajacion_alfa','estira_cuello','meditacion_manana']},
+    {l:'✊ Lo manejo, pero me deja agotado',t:['ancla_3dedos','precompe','meditacion_manana','estira_noche']}
+  ]},
+  {id:'sueno',q:'¿Cómo es tu sueño últimamente?',sub:'',
+   opts:[
+    {l:'😩 Mal: me cuesta dormir o me despierto seguido',t:['sueno_respiracion','apagar_pantallas','meditacion_noche','estira_noche','leer_dormir']},
+    {l:'😐 Regular: duermo pero no descanso bien',t:['meditacion_noche','sueno_programar','estira_noche','leer_dormir']},
+    {l:'😌 Bien: duermo bastante bien',t:[]}
+  ]},
+  {id:'manana',q:'¿Cuánto tiempo tenés libre a la mañana para un ritual?',sub:'Además del Plan Básico de la app',
+   opts:[
+    {l:'⚡ Muy poco (menos de 5 min)',t:['estira_cuello']},
+    {l:'⏱️ Unos minutos (5 a 15 min)',t:['meditacion_manana','estira_cuello','estira_manana']},
+    {l:'🌅 Bastante (más de 15 min)',t:['estira_manana','meditacion_manana','meditacion_scan']}
+  ]},
+  {id:'cuerpo',q:'¿Cuánto tiempo pasás sentado o frente a una pantalla?',sub:'',
+   opts:[
+    {l:'💻 La mayor parte del día (trabajo de escritorio)',t:['estira_cuello','estira_espalda','estira_manana']},
+    {l:'🚶 Un mix: sentado y en movimiento',t:['estira_cuello','estira_piernas']},
+    {l:'🏃 Mucho movimiento físico todo el día',t:['estira_piernas','estira_noche','meditacion_noche']}
+  ]},
+  {id:'emociones',q:'¿Cómo manejás emociones difíciles (enojo, miedo, tristeza)?',sub:'',
+   opts:[
+    {l:'🪨 Las aguanto y acumulo hacia adentro',t:['difusion','meditacion_scan','estira_noche','relajacion_alfa','meditacion_noche']},
+    {l:'💥 Las expreso y después me arrepiento',t:['mensaje_yo','escucha_activa','respira478','ancla_3dedos']},
+    {l:'🔍 Las identifico pero no sé cómo regularlas',t:['relajacion_alfa','ancla_3dedos','mindfulness','difusion']},
+    {l:'✅ Bastante bien — solo quiero seguir mejorando',t:['precompe','visualizacion','meditacion_manana']}
+  ]},
+  {id:'metas',q:'¿Cómo está tu relación con tus metas?',sub:'',
+   opts:[
+    {l:'🚧 Tengo metas pero no consigo avanzar',t:['objetivo_definido','foco_monotarea','afirmacion_identidad']},
+    {l:'🗺️ Me cuesta definir hacia dónde quiero ir',t:['objetivo_definido','visualizacion','placer']},
+    {l:'📈 Avanzo, pero me falta constancia',t:['afirmacion_identidad','creencia_reescribir','foco_monotarea']},
+    {l:'🎯 Mis metas están claras y las estoy logrando',t:['precompe','visualizacion','dinero_abundancia']}
+  ]}
+];
+let testAnswers={},testStep=0;
+
+function showTest(){
+  testAnswers={};testStep=0;
+  document.getElementById('testOverlay').classList.add('show');
+  renderTestQ();window.scrollTo(0,0);
+}
+function closeTest(){document.getElementById('testOverlay').classList.remove('show');}
+function renderTestQ(){
+  const total=TEST_Q.length;
+  document.getElementById('testBar').style.width=Math.round(testStep/total*100)+'%';
+  if(testStep>=total){renderTestResult();return;}
+  const q=TEST_Q[testStep],sel=testAnswers[q.id];
+  document.getElementById('testContent').innerHTML=`
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:700;letter-spacing:.5px">PREGUNTA ${testStep+1} DE ${total}</div>
+    <div class="testQ">${q.q}</div>
+    ${q.sub?`<div class="testSub">${q.sub}</div>`:'<div style="height:10px"></div>'}
+    <div class="testOpts">${q.opts.map((o,i)=>`<button class="testOpt${sel===i?' sel':''}" onclick="selectTestOpt(${i})">${o.l}</button>`).join('')}</div>
+    <div class="testNav">
+      ${testStep>0?`<button class="tback" onclick="testBack()">← Atrás</button>`:''}
+      <button class="tnext" onclick="testNext()" ${sel===undefined?'disabled':''}>
+        ${testStep===total-1?'Ver mis herramientas →':'Siguiente →'}
+      </button>
+    </div>`;
+}
+function selectTestOpt(i){
+  testAnswers[TEST_Q[testStep].id]=i;
+  document.querySelectorAll('.testOpt').forEach((b,idx)=>b.classList.toggle('sel',idx===i));
+  document.querySelector('.tnext').disabled=false;
+}
+function testNext(){if(testAnswers[TEST_Q[testStep].id]===undefined)return;testStep++;renderTestQ();}
+function testBack(){if(testStep>0){testStep--;renderTestQ();}}
+function computeTestRecs(){
+  const score={};
+  TEST_Q.forEach(q=>{const i=testAnswers[q.id];if(i===undefined)return;q.opts[i].t.forEach(id=>{score[id]=(score[id]||0)+1;});});
+  return EXTRAS.map(t=>({t,s:score[t.id]||0})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,8).map(x=>x.t);
+}
+function renderTestResult(){
+  document.getElementById('testBar').style.width='100%';
+  const recs=computeTestRecs();
+  const catScore={};
+  TEST_Q.forEach(q=>{const i=testAnswers[q.id];if(i===undefined)return;q.opts[i].t.forEach(id=>{const t=EXTRAS.find(e=>e.id===id);if(t&&t.cat)catScore[t.cat]=(catScore[t.cat]||0)+1;});});
+  const topCat=Object.entries(catScore).sort((a,b)=>b[1]-a[1])[0];
+  const catLabel={calma:'calma y manejo del estrés',estiramiento:'movimiento y cuerpo',meditacion:'meditación',foco:'foco y productividad',relaciones:'relaciones',creencias:'mentalidad y creencias',sueno:'sueño y descanso',dinero:'finanzas y metas',metas:'metas',confianza:'confianza'};
+  db.testProfile={answers:testAnswers,recs:recs.map(t=>t.id),date:todayKey};DB.save(db);
+  document.getElementById('testContent').innerHTML=`
+    <div style="text-align:center;margin-bottom:22px">
+      <div style="font-size:40px">🧩</div>
+      <div style="font-size:18px;font-weight:800;margin:8px 0 4px">Tu perfil está listo</div>
+      ${topCat?`<div style="font-size:13px;color:var(--muted)">Área de mayor potencial: <b style="color:var(--accent)">${catLabel[topCat[0]]||topCat[0]}</b></div>`:''}
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Tus herramientas recomendadas</div>
+    <div class="recGrid">${recs.length?recs.map(t=>{const cat=CATS.find(c=>c.id===(t.cat||TOOLCAT[t.id]));return`<div class="recCard"><div class="ri">${t.ico}</div><div class="rt"><b>${t.title}</b><small>${t.when||''}</small>${cat?`<div class="rtag">${cat.ico} ${cat.name}</div>`:''}</div></div>`;}).join(''):'<p style="color:var(--muted);font-size:13px">Completá todas las preguntas para ver tus recomendaciones.</p>'}</div>
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:16px;font-size:13px;line-height:1.55;color:var(--muted)">💡 Estas herramientas están en <b style="color:var(--txt)">🧰 Resolver</b>. Abrí cualquiera y tocá ☀️ Tarde 🌙 para sumarla a tu rutina diaria.</div>
+    <button class="testBtnGo" onclick="closeTest();go('resolver')">Ir a Resolver y explorarlas →</button>
+    <button class="testBtnRetry" onclick="testStep=0;testAnswers={};renderTestQ()">Repetir el test</button>`;
 }
 
 /* ---------- nav ---------- */
