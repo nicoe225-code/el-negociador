@@ -223,6 +223,27 @@
   .testBtnRetry{width:100%;background:none;border:1px solid var(--line);color:var(--muted);
     padding:12px;border-radius:12px;font-size:14px;cursor:pointer;margin-top:10px}
 
+  /* ---- routine proposal in test ---- */
+  .routineProposed{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}
+  .rpHead{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin:0 0 4px}
+  .rpSub{font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5}
+  .rpSlot{margin-bottom:16px}
+  .rpSlotH{font-size:14px;font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:6px}
+  .rpTool{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:6px;cursor:pointer;transition:.15s;user-select:none}
+  .rpTool.off{opacity:.35;border-style:dashed}
+  .rpTool.on{border-color:rgba(63,202,161,.45)}
+  .rpTool .rtIco{font-size:18px;flex:none}
+  .rpTool .rtTxt{flex:1}
+  .rpTool .rtTxt b{font-size:13.5px;display:block}
+  .rpTool .rtTxt small{font-size:11px;color:var(--muted)}
+  .rpTool .rtChk{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:12px;color:#fff;flex-shrink:0}
+  .rpTool.on .rtChk{background:var(--green);border-color:var(--green)}
+  .applyRtnBtn{width:100%;border:none;background:linear-gradient(135deg,var(--green),#2fae8a);color:#04201a;font-weight:800;padding:14px;border-radius:13px;font-size:15px;cursor:pointer;margin-top:8px}
+  /* quitar de rutina */
+  .btnQuitRtn{width:100%;background:none;border:1px solid rgba(255,107,107,.25);color:#ff9f9f;font-size:12.5px;font-weight:600;border-radius:10px;padding:8px 12px;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px}
+  /* agregar a rutina */
+  .addRtnLink{display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--accent);font-weight:600;cursor:pointer;padding:12px;border:1px dashed rgba(79,157,255,.3);border-radius:12px;margin-top:6px;background:rgba(79,157,255,.05)}
+
   /* ---- overlap warning in routine ---- */
   .overlapWarn{background:rgba(255,203,69,.08);border:1px solid rgba(255,203,69,.3);border-radius:12px;
     padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.6;color:#f0d580}
@@ -1097,6 +1118,7 @@ function toolCardHTML(x, routineSlot){
         ${x.fields.map((f,i)=>`<label class="fieldLbl">${f}</label><textarea class="noteArea" rows="2" placeholder="Escribí acá..." oninput="noteSave('${x.id}',${i},this.value)">${(N[i]||'').replace(/</g,'&lt;')}</textarea>`).join('')}
       </div>`:''}
       <button class="btnDone ${done?'is-done':''}" onclick="${doneHandler}">${done?'✓ Hecho':'Marcar como hecho'}</button>
+      ${inRoutine?`<button class="btnQuitRtn" onclick="toggleRoutine('${x.id}','${routineSlot}')">✕ Quitar de esta rutina</button>`:''}
       ${!inRoutine?`<div class="routineCtl">
         ${(()=>{const rs=TOOL_SLOTS[x.id]||[];return rs.length?`<div style="margin-bottom:8px;font-size:12.5px;color:var(--muted)">📅 Mejor momento: <span style="color:var(--txt);font-weight:600">${rs.map(s=>SLOT_LABEL[s]).join(' · ')}</span></div>`:'';})()}
         <span class="routineLbl">¿La vas a hacer seguido? Sumala a tu rutina:</span>
@@ -1121,8 +1143,9 @@ function renderRoutine(slot){
   if(!tools.length){wrap.innerHTML='<p class="routineEmpty">Todavía no sumaste herramientas acá. Entrá a 🧰 Resolver, abrí una herramienta y tocá el momento del día para sumarla a tu rutina.</p>';return;}
   const warns=detectOverlaps(slot,tools);
   const warnHTML=warns.length?`<div class="overlapWarn">⚠️ ${warns.join('<br>⚠️ ')}</div>`:'';
+  const addLink=`<div class="addRtnLink" onclick="go('resolver')">⊕ Agregar herramienta desde Resolver</div>`;
   const op=[...wrap.querySelectorAll('.card')].map(c=>c.classList.contains('open'));
-  wrap.innerHTML=warnHTML+tools.map(t=>toolCardHTML(t,slot)).join('');
+  wrap.innerHTML=warnHTML+tools.map(t=>toolCardHTML(t,slot)).join('')+addLink;
   [...wrap.querySelectorAll('.card')].forEach((c,i)=>{if(op[i])c.classList.add('open')});
 }
 function refreshTools(){
@@ -1286,6 +1309,54 @@ const TEST_Q=[
   ]}
 ];
 let testAnswers={},testStep=0;
+let proposedRoutine={manana:[],tarde:[],noche:[]};
+let currentRecs=[];
+
+function buildRoutineFromRecs(recs){
+  const slots={manana:[],tarde:[],noche:[]};
+  const MAX=3;
+  recs.forEach(t=>{
+    (TOOL_SLOTS[t.id]||[]).forEach(s=>{
+      if(slots[s].length<MAX&&!slots[s].includes(t.id))slots[s].push(t.id);
+    });
+  });
+  return slots;
+}
+function toggleProposedSlot(id,slot){
+  proposedRoutine[slot]=proposedRoutine[slot]||[];
+  const i=proposedRoutine[slot].indexOf(id);
+  if(i>=0)proposedRoutine[slot].splice(i,1);else proposedRoutine[slot].push(id);
+  renderProposedRoutine();
+}
+function renderProposedRoutine(){
+  const el=document.getElementById('proposedRoutineView');if(!el)return;
+  const on=(slot,id)=>(proposedRoutine[slot]||[]).includes(id);
+  let html='';
+  ['manana','tarde','noche'].forEach(slot=>{
+    const eligible=currentRecs.filter(t=>(TOOL_SLOTS[t.id]||[]).includes(slot));
+    if(!eligible.length)return;
+    html+=`<div class="rpSlot">
+      <div class="rpSlotH">${SLOT_LABEL[slot]}</div>
+      ${eligible.map(t=>`<div class="rpTool ${on(slot,t.id)?'on':'off'}" onclick="toggleProposedSlot('${t.id}','${slot}')">
+        <div class="rtIco">${t.ico}</div>
+        <div class="rtTxt"><b>${t.title}</b><small>${t.when?t.when.split('·')[0].trim():''}</small></div>
+        <div class="rtChk">${on(slot,t.id)?'✓':''}</div>
+      </div>`).join('')}
+    </div>`;
+  });
+  el.innerHTML=html||'<p style="color:var(--muted);font-size:13px">Sin herramientas para asignar a esta rutina.</p>';
+}
+function applyProposedRoutine(){
+  ['manana','tarde','noche'].forEach(s=>{
+    db.routine[s]=[...new Set([...(db.routine[s]||[]),...(proposedRoutine[s]||[])])];
+  });
+  db.testProfile=db.testProfile||{};
+  db.testProfile.routine=JSON.parse(JSON.stringify(proposedRoutine));
+  db.testProfile.date=todayKey;
+  DB.save(db);
+  toast('✅ Rutina aplicada. La ves en Mañana, Tarde y Noche.');
+  closeTest();go('hoy');
+}
 
 function showTest(){
   testAnswers={};testStep=0;
@@ -1333,22 +1404,32 @@ function computeTestRecs(){
 function renderTestResult(){
   document.getElementById('testBar').style.width='100%';
   const recs=computeTestRecs();
+  currentRecs=recs;
+  proposedRoutine=buildRoutineFromRecs(recs);
   const catScore={};
   TEST_Q.forEach(q=>{const sel=testAnswers[q.id]||[];sel.forEach(i=>{(q.opts[i]?.t||[]).forEach(id=>{const t=EXTRAS.find(e=>e.id===id);if(t&&t.cat)catScore[t.cat]=(catScore[t.cat]||0)+1;});});});
   const topCat=Object.entries(catScore).sort((a,b)=>b[1]-a[1])[0];
   const catLabel={calma:'calma y manejo del estrés',estiramiento:'movimiento y cuerpo',meditacion:'meditación',foco:'foco y productividad',relaciones:'relaciones',creencias:'mentalidad y creencias',sueno:'sueño y descanso',dinero:'finanzas y metas',metas:'metas',confianza:'confianza'};
   db.testProfile={answers:testAnswers,recs:recs.map(t=>t.id),date:todayKey};DB.save(db);
   document.getElementById('testContent').innerHTML=`
-    <div style="text-align:center;margin-bottom:22px">
+    <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:40px">🧩</div>
       <div style="font-size:18px;font-weight:800;margin:8px 0 4px">Tu perfil está listo</div>
       ${topCat?`<div style="font-size:13px;color:var(--muted)">Área de mayor potencial: <b style="color:var(--accent)">${catLabel[topCat[0]]||topCat[0]}</b></div>`:''}
     </div>
-    <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Tus herramientas recomendadas</div>
+    <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Herramientas recomendadas para vos</div>
     <div class="recGrid">${recs.length?recs.map(t=>{const cat=CATS.find(c=>c.id===(t.cat||TOOLCAT[t.id]));return`<div class="recCard"><div class="ri">${t.ico}</div><div class="rt"><b>${t.title}</b><small>${t.when||''}</small>${cat?`<div class="rtag">${cat.ico} ${cat.name}</div>`:''}</div></div>`;}).join(''):'<p style="color:var(--muted);font-size:13px">Completá todas las preguntas para ver tus recomendaciones.</p>'}</div>
-    <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:16px;font-size:13px;line-height:1.55;color:var(--muted)">💡 Estas herramientas están en <b style="color:var(--txt)">🧰 Resolver</b>. Abrí cualquiera y tocá ☀️ Tarde 🌙 para sumarla a tu rutina diaria.</div>
-    <button class="testBtnGo" onclick="closeTest();go('resolver')">Ir a Resolver y explorarlas →</button>
+
+    <div class="routineProposed">
+      <div class="rpHead">Tu rutina personalizada</div>
+      <p class="rpSub">Armé esta rutina en base a tus respuestas. Tocá cada herramienta para incluirla o quitarla antes de aplicar.</p>
+      <div id="proposedRoutineView"></div>
+      <button class="applyRtnBtn" onclick="applyProposedRoutine()">✅ Aplicar esta rutina →</button>
+    </div>
+
+    <button class="testBtnGo" style="margin-top:14px" onclick="closeTest();go('resolver')">Explorar todas las herramientas →</button>
     <button class="testBtnRetry" onclick="testStep=0;testAnswers={};renderTestQ()">Repetir el test</button>`;
+  renderProposedRoutine();
 }
 
 /* ---------- nav ---------- */
