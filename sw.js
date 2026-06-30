@@ -1,4 +1,4 @@
-const CACHE = 'negociador-v9';
+const CACHE = 'negociador-v11';
 const ASSETS = [
   './manifest.webmanifest',
   './icon-192.png',
