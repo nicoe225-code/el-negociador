@@ -30,8 +30,9 @@
   }
   .wrap{max-width:560px;margin:0 auto;padding:20px 16px 0}
   header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-  .brand{font-weight:800;font-size:18px;letter-spacing:.2px}
+  .brand{font-weight:800;font-size:18px;letter-spacing:.2px;display:flex;align-items:baseline;gap:7px}
   .brand span{color:var(--accent)}
+  .version-badge{font-size:10px;font-weight:600;color:var(--muted);background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:2px 6px;letter-spacing:.4px}
   .date{font-size:12px;color:var(--muted)}
   h1{font-size:24px;margin:14px 0 2px;line-height:1.2}
   .sub{color:var(--muted);font-size:14px;margin:0 0 18px}
@@ -90,6 +91,17 @@
   .timer button{margin-top:10px;border:none;background:var(--accent);color:#fff;font-weight:700;
     padding:11px 22px;border-radius:12px;font-size:14px;cursor:pointer}
   .timer .hint{font-size:12px;color:var(--muted);margin-top:8px}
+  .timerBar{height:5px;background:var(--line);border-radius:3px;margin-top:10px;overflow:hidden}
+  .timerBar .fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:3px;width:100%;transition:width 1s linear}
+
+  /* mute button */
+  .muteBtn{background:rgba(79,157,255,.08);border:1px solid var(--line);color:var(--muted);border-radius:20px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:.2s}
+  .muteBtn.muted{color:var(--red);border-color:rgba(255,107,107,.25);background:rgba(255,107,107,.06)}
+
+  /* EMDR animated dot */
+  .emdrTrack{position:relative;height:72px;background:var(--bg2);border-radius:14px;overflow:hidden;margin:14px 0}
+  .emdrDot{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--accent),var(--accent2));position:absolute;top:50%;transform:translateY(-50%);left:8%;box-shadow:0 0 20px rgba(79,157,255,.5);transition:left .8s ease-in-out}
+  .emdrDot.r{left:calc(92% - 30px)}
 
   .btnDone{width:100%;border:none;background:linear-gradient(135deg,var(--green),#2fae8a);
     color:#04201a;font-weight:800;padding:13px;border-radius:13px;font-size:14px;cursor:pointer;margin-top:6px}
@@ -340,8 +352,9 @@
 
 <div class="wrap">
   <header>
-    <div class="brand">El <span>Negociador</span></div>
+    <div class="brand">El <span>Negociador</span><span class="version-badge">v1.1.0</span></div>
     <div class="topRight">
+      <button class="muteBtn" id="muteBtn" onclick="AUDIO.toggle()">🔔</button>
       <button class="info" onclick="showWelcome()">ℹ️ Qué es</button>
       <div class="date" id="date"></div>
     </div>
@@ -563,6 +576,39 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* ---------- audio (campana tibetana) ---------- */
+const AUDIO={
+  _ctx:null,muted:false,
+  ctx(){return this._ctx||(this._ctx=new(window.AudioContext||window.webkitAudioContext)())},
+  bell(freqs,vol,dur){
+    if(this.muted)return;
+    try{
+      const c=this.ctx();
+      freqs.forEach(([f,v,d])=>{
+        const o=c.createOscillator(),g=c.createGain();
+        o.connect(g);g.connect(c.destination);
+        o.type='sine';o.frequency.value=f;
+        g.gain.setValueAtTime(v*vol,c.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+d);
+        o.start(c.currentTime);o.stop(c.currentTime+d);
+      });
+    }catch(e){}
+  },
+  start(){this.bell([[528,.4,2],[1056,.12,.9],[792,.1,1.4]],.9)},
+  end(){
+    const c=this;
+    c.bell([[396,.5,3],[528,.25,2.2]],.9);
+    setTimeout(()=>c.bell([[528,.35,2.5],[660,.15,1.8]],.9),500);
+  },
+  phase(){this.bell([[660,.12,.6]],.8)},
+  toggle(){
+    this.muted=!this.muted;
+    const b=document.getElementById('muteBtn');
+    b.textContent=this.muted?'🔇':'🔔';
+    b.classList.toggle('muted',this.muted);
+  }
+};
+
 /* ---------- data ---------- */
 const todayKey = new Date().toISOString().slice(0,10);
 const DB = {
@@ -635,7 +681,7 @@ function renderCards(){
           card.steps.map((s,i)=>`<li class="${st.steps[i]?'on':''}" onclick="stepTog('${card.id}',${i})"><span class="b">✓</span>${s}</li>`).join('')
         }</ul></div>`:''}
         ${card.breath?`<div class="orb-wrap"><div class="orb" id="orb_${card.id}">Inhalá</div></div>`:''}
-        ${card.timer?`<div class="timer"><div class="num" id="tn_${card.id}">${fmt(card.timer)}</div><button onclick="startTimer('${card.id}',${card.timer},${!!card.breath})">Iniciar</button><div class="hint">${card.breath?'Seguí el orbe: crece=inhalá, baja=exhalá':'2 minutos cambian tu hormona'}</div></div>`:''}
+        ${card.timer?`<div class="timer"><div class="num" id="tn_${card.id}">${fmt(card.timer)}</div><button onclick="startTimer('${card.id}',${card.timer},${!!card.breath})">Iniciar</button><div class="hint">${card.breath?'Seguí el orbe: crece=inhalá, baja=exhalá':'El timer suena al terminar'}</div><div class="timerBar"><div class="fill" id="tb_${card.id}"></div></div></div>`:''}
         ${card.input?`<div class="row"><div class="lbl">Cómo</div><input class="oneOff" id="in_${card.id}" placeholder="Hoy quiero detectar: una oportunidad de..." value="${st.val||''}" oninput="saveVal('${card.id}',this.value)" style="width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px;font-size:14px"></div>`:''}
         ${card.input2?`<div class="row"><input id="in_${card.id}" placeholder='Si pasa ____, entonces hago ____' value="${st.val||''}" oninput="saveVal('${card.id}',this.value)" style="width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px;font-size:14px;margin-top:6px"></div>`:''}
         <button class="btnDone ${st.done?'is-done':''}" onclick="markDone('${card.id}')">${st.done?'✓ Hecho — buen dos':'Marcar como hecho'}</button>
@@ -674,18 +720,38 @@ function markDone(id){
 /* ---------- timer + breathing ---------- */
 let timers={};
 function startTimer(id,secs,breath){
-  if(timers[id]){clearInterval(timers[id].iv);clearInterval(timers[id].bv);timers[id]=null;
-    document.getElementById('tn_'+id).textContent=fmt(secs);return}
-  let left=secs; const num=document.getElementById('tn_'+id);
+  if(timers[id]){
+    clearInterval(timers[id].iv);clearInterval(timers[id].bv);timers[id]=null;
+    document.getElementById('tn_'+id).textContent=fmt(secs);
+    const bar=document.getElementById('tb_'+id);if(bar)bar.style.width='100%';
+    return;
+  }
+  AUDIO.start();
+  let left=secs;
+  const num=document.getElementById('tn_'+id);
+  const bar=document.getElementById('tb_'+id);
+  if(bar)bar.style.width='100%';
   timers[id]={};
-  timers[id].iv=setInterval(()=>{left--;num.textContent=fmt(left);
-    if(left<=0){clearInterval(timers[id].iv);clearInterval(timers[id].bv);timers[id]=null;
-      num.textContent='✓ Listo';toast('Hecho. Tu cerebro ya cambió.');}
+  timers[id].iv=setInterval(()=>{
+    left--;num.textContent=fmt(left);
+    if(bar)bar.style.width=Math.round(left/secs*100)+'%';
+    if(left<=0){
+      clearInterval(timers[id].iv);clearInterval(timers[id].bv);timers[id]=null;
+      num.textContent='✓ Listo';
+      if(bar){bar.style.transition='none';bar.style.width='0%';}
+      AUDIO.end();
+      toast('Hecho. Tu cerebro ya cambió.');
+    }
   },1000);
   if(breath){
     const orb=document.getElementById('orb_'+id);let phase=0;
-    const cyc=()=>{ if(phase%2===0){orb.className='orb in';orb.textContent='Inhalá (vientre)'} else {orb.className='orb out';orb.textContent='Exhalá lento'} phase++ };
-    cyc(); timers[id].bv=setInterval(cyc,5000);
+    const cyc=()=>{
+      AUDIO.phase();
+      if(phase%2===0){orb.className='orb in';orb.textContent='Inhalá (vientre)'}
+      else{orb.className='orb out';orb.textContent='Exhalá lento'}
+      phase++;
+    };
+    cyc();timers[id].bv=setInterval(cyc,5000);
   }
 }
 
@@ -716,7 +782,7 @@ function renderTarde(){
         <div class="row"><div class="lbl">Por qué funciona (la ciencia)</div><p>${card.why}</p></div>
         <div class="row"><span class="benefit">${card.benefit}</span></div>
         <div class="row"><div class="lbl">Cómo se hace</div><ul class="steps">${card.steps.map((s,i)=>`<li class="${st.steps[i]?'on':''}" onclick="tStepTog('${card.id}',${i})"><span class="b">✓</span>${s}</li>`).join('')}</ul></div>
-        <div class="timer"><div class="num" id="tn_t${card.id}">${fmt(card.timer)}</div><button onclick="startTimer('t${card.id}',${card.timer},false)">Iniciar</button><div class="hint">60 segundos cambian tu hormona</div></div>
+        <div class="timer"><div class="num" id="tn_t${card.id}">${fmt(card.timer)}</div><button onclick="startTimer('t${card.id}',${card.timer},false)">Iniciar</button><div class="hint">Suena al terminar · ${fmt(card.timer)}</div><div class="timerBar"><div class="fill" id="tb_t${card.id}"></div></div></div>
         <button class="btnDone ${st.done?'is-done':''}" onclick="tMarkDone('${card.id}')">${st.done?'✓ Recargado':'Marcar como hecho'}</button>
       </div>`;
     c.appendChild(el);
@@ -1005,7 +1071,198 @@ const EXTRAS=[
     why:'La tensión física y el estrés emocional son inseparables. Llevar la atención consciente a cada zona del cuerpo activa el sistema parasimpático y libera tensión muscular sin ningún esfuerzo físico.',
     benefit:'Libera tensión física · baja el estrés · mejora la conciencia corporal',
     steps:['Acostate boca arriba, brazos a los costados','Hacé 3 respiraciones lentas y profundas','Llevá la atención a los pies: ¿calor, tensión, hormigueo? Solo observá','Subí lentamente: tobillos, pantorrillas, rodillas, muslos, cadera','Continuá: vientre, pecho, espalda, hombros, brazos, manos','Cuello, cara, cabeza: notá cada zona sin juzgar','Si hay tensión en algún lugar, inhalá y al exhalar imaginate que se suelta'],
-    timer:600 }
+    timer:600 },
+
+  /* 🧪 NEUROHACKS */
+  { id:'havening', cat:'neurohacks', ico:'🤲', title:'Havening táctil',
+    when:'Ansiedad, estrés agudo o recuerdo perturbador · 90 segundos',
+    intro:'El Havening usa toque táctil suave en cara y brazos para desactivar la carga emocional almacenada en la amígdala. El Dr. Ronald Ruden descubrió que este toque activa receptores delta que "borran" el estrés de un recuerdo o sensación. Parece brujería, pero es electroquímica pura: el toque genera señales que interrumpen el circuito del miedo en la amígdala.',
+    why:'Las caricias suaves en cara y brazos generan señales delta que reducen el receptor AMPA (que mantiene el miedo activo en la amígdala). En estudios con cortisol en saliva, baja en 90 segundos de práctica.',
+    benefit:'Baja ansiedad en 90 seg · desactiva la amígdala · discreto y rápido',
+    steps:['Puntuá del 1 al 10 cuánto te molesta lo que querés trabajar','Frotá suavemente las palmas hacia abajo en ambos brazos, como si te limpiaras (20 veces)','Hacé lo mismo en la cara: desde la frente hacia abajo, suave (20 veces)','Frotá desde las mejillas hacia el cuello (20 veces)','Repasá los brazos nuevamente mientras imaginás una escena tranquila que te guste','Puntuá nuevamente — suele bajar 2 a 4 puntos en una sola ronda'],
+    timer:90 },
+
+  { id:'eft_tapping', cat:'neurohacks', ico:'🪄', title:'EFT Tapping',
+    when:'Ansiedad, miedo específico, bloqueo emocional · 5 minutos',
+    intro:'EFT (Emotional Freedom Technique) combina golpecitos suaves en puntos de acupresión con una frase verbal que nombra el problema. La combinación activa simultáneamente el sistema nervioso somático y el verbal, reduciendo la reactividad de la amígdala. Estudios miden caída de cortisol en sangre del 24% en una sola sesión.',
+    why:'Los puntos de acupresión tienen alta densidad de receptores mecanosensoriales. El golpeteo genera impulsos que compiten con la señal de amenaza de la amígdala. RCTs muestran reducción significativa de cortisol y síntomas de ansiedad vs grupos control.',
+    benefit:'Baja cortisol 24% · procesa miedos específicos · efectivo en una sesión',
+    steps:['Nombrá el problema en voz alta: "Aunque tengo este miedo/ansiedad por ___, me acepto completamente"','Karate chop (lado de la mano): golpecitos suaves repitiendo la frase, 7 veces','Inicio de ceja (lado interno): 7 golpecitos suaves','Lado externo del ojo: 7 golpecitos','Bajo el ojo (pómulo): 7 golpecitos','Bajo la nariz: 7 golpecitos','Mentón: 7 golpecitos','Clavícula (debajo): 7 golpecitos','Bajo el brazo (costado del pecho, altura del corazón): 7 golpecitos','Corona de la cabeza: 7 golpecitos','Respirá hondo y puntuá la intensidad. Repetí si sigue alta.'],
+    fields:['¿Qué problema, miedo o emoción vas a trabajar?','Intensidad antes (0-10):','Intensidad después (0-10):'] },
+
+  { id:'coherencia_cardiaca', cat:'neurohacks', ico:'💙', title:'Coherencia cardíaca',
+    when:'Antes de una reunión importante, tras estrés, para calmarte profundo · 5 minutos',
+    intro:'La coherencia cardíaca es el estado en que el ritmo del corazón y el cerebro se sincronizan. HeartMath Institute descubrió que respirar 5 segundos inhalando y 5 exhalando crea esta sincronía. En coherencia, el corazón le envía señales de calma al cerebro que reorganizan cómo procesás las emociones. 5 minutos cambian tu biología medible en HRV.',
+    why:'Respirar a 0.1 Hz (1 ciclo cada 10 seg) maximiza la variabilidad de la frecuencia cardíaca (HRV), el mejor indicador de salud del sistema nervioso autónomo. Reduce cortisol, mejora claridad mental y resiliencia emocional. Medible en tiempo real.',
+    benefit:'Sincroniza corazón y cerebro · eleva HRV · resiliencia emocional',
+    steps:['Sentate cómodo con la espalda recta, ojos cerrados o semiferrados','Seguí el orbe: inhalá 5 segundos inflando el vientre','Exhalá 5 segundos, suave y completo','Podés imaginar que la respiración sale desde el corazón','Continuá 5 minutos sin interrumpir el ritmo','Al terminar, sentate 30 seg en silencio antes de levantarte'],
+    breathCoherence:true },
+
+  { id:'emdr', cat:'neurohacks', ico:'👁️', title:'EMDR simplificado',
+    when:'Después de algo estresante, ansiedad moderada o recuerdo perturbador · 2 minutos',
+    intro:'El EMDR (Eye Movement Desensitization and Reprocessing) usa movimientos oculares bilaterales para procesar recuerdos con carga emocional. Los ojos moviéndose de lado a lado activan la memoria de trabajo bilateral, igual que en la fase REM del sueño, reduciendo la intensidad emocional de lo que estás pensando. Es uno de los tratamientos de trauma más respaldados del mundo con más de 30 RCTs.',
+    why:'Los movimientos oculares horizontales activan alternativamente los hemisferios cerebrales, facilitando el reprocesamiento de memorias con carga emocional. El mecanismo es similar al sueño REM: la amígdala baja su activación mientras el hipocampo reconsolida el recuerdo.',
+    benefit:'Reduce carga emocional de recuerdos · procesa estrés · sin terapeuta',
+    steps:['Traé a la mente la situación que te molesta (no la peor, algo de intensidad 4-6/10)','Seguí el punto que se mueve con los ojos, sin mover la cabeza','Dejá que los pensamientos y sensaciones fluyan, sin analizarlos','Al terminar, respirá hondo y observá cómo cambió la sensación','Podés repetir si la intensidad sigue alta'],
+    hasEMDR:true },
+
+  { id:'vago_estimulacion', cat:'neurohacks', ico:'🎵', title:'Estimulación del nervio vago',
+    when:'Ansiedad aguda, estado de alerta, para activar el modo calma rápido · 2-3 min',
+    intro:'El nervio vago es el interruptor más grande entre tu cerebro y tu cuerpo. Cuando lo estimulás, activás directamente el sistema parasimpático. Hay formas ridículamente simples: tararear hace vibrar el nervio vago directamente, el agua fría en la cara activa el reflejo de buceo, y gargarizar también lo estimula. Sin equipamiento, sin pastillas.',
+    why:'El nervio vago inerva el 80% de los órganos internos. Las vibraciones del "humming" estimulan el ganglio nodoso del vago directamente. El reflejo de inmersión (agua fría en cara + apnea) baja la FC 10-25% en segundos por vía trigeminal-cardíaca.',
+    benefit:'Activa el modo calma en segundos · baja cortisol · sin equipamiento',
+    steps:['Opción 1 — Humming: cerrá la boca y tarareá "mmmm" en tono bajo, 1-2 minutos. Sentís la vibración en el pecho.','Opción 2 — Agua fría en cara: mojate la cara con agua fría y aguantá el aire 10-15 seg. Activás el reflejo de buceo.','Opción 3 — Gargarismo: hacé gárgaras con agua 30 seg, 3 veces seguidas.','Opción 4 — Canto largo: cantá cualquier canción enfatizando las vocales.','Elegí la que tenés a mano y notá cómo baja el ritmo cardíaco en 1-2 min.'],
+    timer:120 },
+
+  { id:'cold_face', cat:'neurohacks', ico:'🧊', title:'Cold face reset',
+    when:'Ansiedad aguda, taquicardia, pánico o necesitás bajar urgente · 30-45 seg',
+    intro:'Mojar la cara con agua fría y aguantar la respiración activa el reflejo de inmersión de los mamíferos: un mecanismo evolutivo de emergencia que baja la frecuencia cardíaca entre 10 y 25% en 30 segundos. Es el freno de emergencia de tu sistema nervioso. Lo usan los Navy SEALs y lo recomienda la terapia DBT para crisis emocionales.',
+    why:'El reflejo trigémino-cardíaco: el frío activa el nervio trigémino que ordena al corazón reducir el ritmo. Combinado con apnea, el efecto se multiplica. Baja FC 10-25% en segundos, medible con cualquier pulsómetro.',
+    benefit:'Baja la FC 10-25% en 30 seg · frena el pánico · instantáneo',
+    steps:['Llenate el lavabo o un bol con agua fría (idealmente con hielo)','Tomá una respiración profunda y aguantala','Sumergí la cara 15-30 segundos (o mojate con agua fría presionando con las manos)','Si no podés mojarte: apoyá una botella fría o hielo en la frente y mejillas','Al salir del agua, exhalá muy lento por la boca','Sentís la baja del ritmo cardíaco casi de inmediato'],
+    timer:45 },
+
+  /* 🎯 NLP AVANZADO */
+  { id:'swish_pattern', cat:'nlp', ico:'⚡', title:'Swish Pattern',
+    when:'Cuando un hábito o imagen mental negativa se repite automáticamente · 5 min',
+    intro:'El Swish Pattern de PNL reemplaza una imagen mental negativa que aparece automáticamente (el disparador de un hábito no deseado) por una imagen de tu mejor versión. Lo hace con velocidad tal que el cerebro no puede resistirlo. Desarrollado por Richard Bandler, funciona porque las imágenes mentales activan los mismos circuitos que los eventos reales.',
+    why:'El cerebro no distingue entre imaginar vívidamente y ver. Al repetir el reemplazo de imagen con velocidad y emoción, se reprograman las asociaciones neuronales automáticas. Es condicionamiento clásico pero consciente y dirigido.',
+    benefit:'Reprograma hábitos automáticos · reemplaza imágenes negativas · durable',
+    steps:['Identificá la imagen negativa disparadora del hábito (qué ves justo antes de hacerlo)','Construila claramente en tu mente: tamaño, color, cercanía','Creá una imagen de tu mejor versión: vos habiendo superado eso, sintiéndote libre y fuerte','Poné la imagen del mejor vos pequeña y opaca en la esquina inferior de la imagen negativa','Rápidamente intercambialas: la del mejor vos crece brillante y toma todo el espacio mientras la negativa se encoge y desaparece. Decí ¡Swish! al hacerlo.','Abrí los ojos 1 segundo (interrumpe el estado), cerrá y repetí 10 veces','Intentá ver la imagen negativa original: si el Swish funcionó, aparece la positiva sola'],
+    fields:['¿Cuál es la imagen o situación que querés cambiar?','¿Cómo es tu mejor versión, ya sin eso?'] },
+
+  { id:'linea_tiempo', cat:'nlp', ico:'🕰️', title:'Línea del tiempo',
+    when:'Para sanar un recuerdo del pasado o anclar un futuro deseado · 10-15 min',
+    intro:'En PNL, la mente organiza el tiempo de forma espacial: el pasado en una dirección, el futuro en otra. Esta técnica te permite "entrar" a un momento del pasado para agregarle un recurso que no tenías (calma, seguridad, comprensión) y que se propague hacia el presente. También podés "entrar" al futuro para vivir el éxito ya logrado.',
+    why:'La representación temporal es una codificación neurológica real. Intervenir en esa representación cambia la carga emocional del recuerdo. El cerebro no distingue bien entre imaginar vívidamente y vivir, por eso el impacto emocional es real y medible.',
+    benefit:'Sana recuerdos · cambia perspectiva temporal · acceso a recursos internos',
+    steps:['Cerrá los ojos y percibí dónde está tu "pasado" en el espacio (¿izquierda, atrás?)','Notá dónde está tu "futuro" (¿derecha, adelante?)','Imaginá que flotás sobre tu línea del tiempo, viéndola desde arriba como un observador','Bajá a un momento del pasado que quieras trabajar: ¿qué recurso necesitabas ahí? (calma, protección, claridad)','Añadí ese recurso en ese momento y observá cómo se propaga hacia el presente','Flotá hacia tu futuro deseado y entrá a ese momento: ¿qué ves, qué sentís, qué podés?','Regresá al presente llevando esa sensación contigo'] },
+
+  { id:'submodalidades', cat:'nlp', ico:'🎨', title:'Submodalidades NLP',
+    when:'Para cambiar cómo te afecta una emoción o recuerdo · 5 min',
+    intro:'Las submodalidades son las características de cómo representás algo en tu mente: ¿la imagen es grande o pequeña, brillante u opaca, cercana o lejana, en color o blanco y negro? Cambiar esas propiedades cambia directamente la emoción asociada. Es hackear la representación interna. Parece imposible hasta que lo probás: acercá y agrandá la imagen de algo agradable, notá cómo sube la emoción.',
+    why:'El cerebro codifica experiencias con atributos sensoriales específicos. Modificar esos atributos modifica la respuesta neurológica asociada. Es la base del trabajo de Bandler sobre cambio rápido de estados: no cambiás el contenido, cambiás el formato.',
+    benefit:'Cambia el impacto emocional de cualquier experiencia · rápido · sin análisis',
+    steps:['Pensá en algo que te genere malestar moderado (no el peor, un 4-6/10)','Observá la imagen mental: ¿es grande o pequeña? ¿brillante u opaca? ¿cerca o lejos? ¿color o blanco y negro?','Para reducir la emoción: achicá la imagen, empujala lejos, ponela en blanco y negro y borrosa','Notá cómo cambia la sensación al cambiar la imagen','Para potenciar algo positivo: agrandá, acercá, ponela a todo color y brillo','Cuando está al máximo, anclá el estado (apretá el puño o juntá los 3 dedos)'],
+    fields:['¿Qué situación vas a trabajar?','Antes: ¿cómo es la imagen (grande/chica, brillante/opaca, cerca/lejos)?','Después de modificarla: ¿qué cambió en la emoción?'] },
+
+  { id:'reencuadre', cat:'nlp', ico:'🔄', title:'Reencuadre de significado',
+    when:'Cuando una situación te parece un problema sin salida · para cambiar cómo algo te afecta',
+    intro:'El reencuadre cambia el significado que le das a una situación sin cambiar los hechos. El problema no está en lo que pasó, está en la historia que te contás sobre lo que pasó. "Me rechazaron" puede ser "aún no es el momento" o "ahora sé qué no funciona". El significado que le das a algo determina cómo te afecta y qué hacés con eso.',
+    why:'El cerebro no registra la realidad directa sino una interpretación. Cambiar el marco interpretativo (frame) cambia la respuesta emocional sin necesidad de cambiar los hechos. Es la base de la terapia cognitiva y el corazón de la PNL.',
+    benefit:'Transforma problemas en información · cambia la emoción sin cambiar el hecho',
+    steps:['Escribí la situación/hecho exactamente como es (sin interpretación)','Escribí el significado que le estás dando ahora','Preguntate: ¿qué otro significado podría tener este mismo hecho?','¿Qué aprendizaje te está forzando a desarrollar? ¿Qué fortaleza?','¿Cómo lo vería alguien que ya lo vivió y hoy está agradecido de haberlo pasado?','Elegí el nuevo marco y escribilo. Notá cómo cambia la emoción.'],
+    fields:['La situación (sin interpretación)','El significado que le estás dando ahora','3 significados alternativos posibles','El nuevo marco que elegís'] },
+
+  { id:'tecnica_cubo', cat:'nlp', ico:'🔮', title:'Técnica del cubo',
+    when:'Para explorar tu estado interno · resolución creativa de problemas · 10-15 min',
+    intro:'La técnica del cubo es una visualización guiada que accede a la mente no consciente a través de metáforas simbólicas. Usada en coaching ejecutivo, te permite explorar cómo estás realmente, cómo te ves, y qué necesitás. No es magia: el inconsciente habla en imágenes y símbolos, y esta técnica le da el espacio para expresarse sin el filtro del pensamiento racional.',
+    why:'La metáfora activa simultáneamente el sistema límbico y las áreas de asociación cortical, permitiendo acceder a representaciones no disponibles al pensamiento lineal. El inconsciente procesa información en paralelo al pensamiento consciente y esta técnica accede a ese procesamiento.',
+    benefit:'Accede a sabiduría interna · explora tu estado real · revela lo que no podías articular',
+    steps:['Cerrá los ojos y relajate con 5 respiraciones lentas','Imaginá un desierto amplio y tranquilo, podés sentir el calor y el silencio','Aparece un cubo en el desierto. Sin pensar, notá: ¿de qué tamaño? ¿material? ¿dónde está? ¿transparente u opaco?','Aparece una escalera. ¿Dónde está en relación al cubo? ¿de qué material? ¿apoyada o flotando?','Aparecen flores. ¿Cuántas? ¿dónde? ¿silvestres o cultivadas?','Aparece un caballo. ¿Cómo es? ¿Está suelto, atado, quieto, moviéndose?','Aparece una tormenta a lo lejos. ¿Está lejos o cerca? ¿Qué tan intensa?','Abrí los ojos y escribí todo lo que viste sin filtrar ni interpretar aún'],
+    fields:['El cubo: ¿cómo es?','La escalera: ¿dónde está y cómo?','Las flores: ¿cuántas y dónde?','El caballo: ¿cómo es y qué hace?','La tormenta: ¿lejos o cerca, intensa?','¿Qué sentiste durante la visualización?'] },
+
+  { id:'disociacion', cat:'nlp', ico:'🎭', title:'Disociación / Asociación',
+    when:'Para reducir el dolor de un recuerdo o amplificar el placer de uno positivo · 5 min',
+    intro:'Asociarse a un recuerdo es revivirlo desde adentro, en primera persona. Disociarse es verlo desde afuera como una película con vos como actor. Esta diferencia cambia radicalmente la intensidad emocional. Para recuerdos dolorosos, disociarte reduce el dolor. Para recuerdos de éxito o recursos que necesitás, asociarte amplifica el recurso.',
+    why:'La perspectiva 1ª vs 3ª persona activa circuitos distintos medibles en neuroimagen. La 1ª persona activa más la ínsula y la amígdala (emoción intensa). La 3ª persona activa más la corteza prefrontal (procesamiento cognitivo, menos carga emocional).',
+    benefit:'Controla la intensidad emocional de recuerdos · poderoso para recursos y trauma suave',
+    steps:['Identificá un recuerdo a procesar (doloroso) o potenciar (positivo)','Si es doloroso → Disociate: imaginá que ves una película con vos como protagonista. Alejá la pantalla, ponela en blanco y negro, achicala. Observá sin sentirte dentro.','Si es positivo → Asociate: entrá al recuerdo en 1ª persona. Sentí lo que sentías, escuchá los sonidos, expandí la imagen a todo color.','Para disociar: seguí achicando la película hasta que el malestar baje','Para asociar: amplificá todos los detalles hasta sentir la emoción al máximo y anclálo','Salí del recuerdo con una respiración profunda y volvé al presente'],
+    fields:['¿Qué recuerdo querés trabajar?','¿Disociarte (doloroso) o asociarte (positivo)?','¿Qué notaste al cambiar la perspectiva?'] },
+
+  /* 🕉️ YOGA Y KRIYAS */
+  { id:'isha_kriya', cat:'kriyas', ico:'🧘', group:'isha_kriya', title:'Isha Kriya',
+    when:'A la mañana o en cualquier momento para reconectarte · 12-18 min',
+    intro:'La Isha Kriya es una meditación guiada de Sadhguru que combina conciencia de la respiración, afirmación interna y observación corporal. Aunque no tiene RCTs propios, sus componentes tienen amplia base científica: breath awareness reduce cortisol y mejora HRV; la observación corporal activa el modo default network de forma controlada; la afirmación repetida modula la red neuronal de identidad.',
+    why:'Sus tres componentes tienen respaldo individual: consciencia de la respiración (reduce cortisol, mejora HRV), disociación controlada del cuerpo (meditación con evidencia sólida en neuroimagen) y repetición de afirmación que modula el modo default network del cerebro. El mecanismo es real.',
+    benefit:'Claridad mental · reducción de estrés · reconexión con el presente',
+    steps:['Sentate con la espalda recta, ojos cerrados, manos sobre los muslos (palmas arriba)','Inhalá por la nariz mientras decís mentalmente: "Yo no soy el cuerpo"','Exhalá por la nariz mientras decís mentalmente: "Yo no soy la mente"','Mantené el ritmo, sin forzar, durante 7 a 18 minutos','Al terminar, mantené los ojos cerrados 2-3 minutos en silencio total','Abrí los ojos muy lentamente y orientate al espacio alrededor'],
+    timer:900 },
+
+  { id:'yoga_namaskar', cat:'kriyas', ico:'🌅', group:'yoga_namaskar', title:'Yoga Namaskar',
+    when:'A la mañana, como activación del cuerpo y la mente · 5-10 min',
+    intro:'El Yoga Namaskar es un saludo al sol profundizado: cada postura sincronizada con la respiración activa un sistema completo de energía y atención. Es la práctica de yoga más respaldada científicamente: movimiento + respiración sincronizada mejora HRV, reduce cortisol y activa el parasimpático. 3-5 rondas activan el cuerpo y la mente para el día.',
+    why:'El yoga tiene extenso respaldo: reduce cortisol, mejora HRV, activa el parasimpático post-sesión, mejora flexibilidad y función inmune. La sincronización de movimiento y respiración amplifica el efecto porque cada postura maximiza la capacidad respiratoria del momento.',
+    benefit:'Activa el cuerpo · mejora HRV · energía y claridad para el día',
+    steps:['Namaskar: de pie, juntá las palmas en el pecho. Exhalá.','Inhalá: estirá los brazos arriba, abrí el pecho hacia atrás','Exhalá: doblate hacia adelante, dejá colgar los brazos','Inhalá: llevá la pierna derecha atrás, rodilla en el suelo, mirá hacia arriba','Retená: llevá la pierna izquierda atrás (plancha alta)','Exhalá: bajá rodillas, pecho y frente al piso','Inhalá: levantá el torso (Cobra), pecho adelante','Exhalá: levantá las caderas (Perro boca abajo)','Inhalá: llevá el pie derecho adelante','Exhalá: traé el izquierdo, doblate hacia adelante','Inhalá: erguíte con brazos arriba','Exhalá: volvé a Namaskar. Repetí 3-5 veces.'],
+    timer:480 },
+
+  { id:'mahamudra', cat:'kriyas', ico:'🔱', title:'Mahamudra',
+    when:'A la mañana o en calma · 5-10 min',
+    intro:'El Mahamudra en la tradición Isha/Hatha combina postura de sentado, respiración y retención. Sus mecanismos físicos son reales: la compresión abdominal durante la retención estimula el nervio vago, la retención eleva CO2 que activa receptores de calma, y la tensión muscular específica genera una descarga de relajación posterior. No necesitás ninguna creencia especial para que funcione.',
+    why:'La compresión abdominal durante la retención estimula el nervio vago (ramo abdominal). La retención de respiración aumenta el CO2 que activa receptores en el tronco cerebral que inducen calma. El efecto fisiológico es real independientemente del marco espiritual.',
+    benefit:'Estimula el nervio vago · calma profunda · activa la energía interna',
+    steps:['Sentate en el piso con las piernas estiradas','Doblá la pierna izquierda y apoyá el pie en el muslo derecho (o lo más cerca que puedas)','Con ambas manos, agarrá el pie derecho estirado o el tobillo','Inhalá profundo expandiendo el vientre al máximo','Retená el aire y contraé los músculos abdominales hacia adentro y arriba (como si los "subieras")','Mirá hacia arriba con los ojos cerrados y sostené 10-15 segundos','Exhalá lento y completamente. Relajá.','Repetí 3 veces, luego cambiá de pierna y hacé 3 más'],
+    timer:300 },
+
+  { id:'sukha_kriya', cat:'kriyas', ico:'✨', title:'Sukha Kriya',
+    when:'Cuando querés alegría, ligereza o en días de baja energía emocional · 5-7 min',
+    intro:'Sukha Kriya (Kriya de la alegría) combina respiración, sonido y vibración para generar un estado de ligereza y bienestar. Aunque no tiene estudios propios específicos, sus componentes son bien conocidos: la respiración rítmica regula el sistema nervioso, los sonidos vocálicos prolongados estimulan el nervio vago, y la resonancia vibratoria en el cuerpo activa el sistema propioceptivo que se conecta con la regulación emocional.',
+    why:'La respiración rítmica regula el sistema nervioso autónomo. Los sonidos vocálicos prolongados (especialmente "m" nasal) estimulan el nervio vago. La vibración en distintas zonas del cuerpo genera retroalimentación somatosensorial que modifica el estado emocional.',
+    benefit:'Eleva el estado de ánimo · activa el nervio vago · ligereza real',
+    steps:['Sentate cómodo con la espalda recta, ojos cerrados','Inhalá profundo y al exhalar emití un largo "AAAAAhhhh" sintiendo la vibración en el pecho (7 veces)','Ahora "UUUUhhhh" (7 veces), sintiendo la vibración en el vientre','Ahora "MMMmm" (7 veces), sintiendo la vibración en la cabeza y el cráneo','Respirá normal 1 minuto observando la sensación de vibración que queda en el cuerpo','Terminá con una inhalación profunda, retención breve y exhalación muy lenta'],
+    timer:420 },
+
+  /* ✨ EXTRAS EN CATEGORÍAS EXISTENTES */
+  { id:'escritura_descarga', cat:'calma', ico:'✍️', title:'Escritura de descarga',
+    when:'Cabeza saturada, antes de tarea importante, para procesar algo difícil · 3 min',
+    intro:'Escribir sin parar durante 3 minutos todo lo que pasa por la cabeza, sin censura, libera la corteza prefrontal. La escritura expresiva traslada el contenido de la memoria de trabajo (que satura el foco) al papel, liberando recursos cognitivos. El rendimiento en tareas posteriores sube de forma medible. James Pennebaker lo investigó durante 30 años.',
+    why:'Estudios de Pennebaker (UT Austin) muestran que la escritura expresiva reduce la rumiación y la carga en la memoria de trabajo. 3 minutos de escritura libre antes de una tarea cognitiva mejoran el rendimiento posterior. La escritura también baja cortisol y mejora función inmune a largo plazo.',
+    benefit:'Libera la memoria de trabajo · baja la rumiación · mejora el foco posterior',
+    steps:['Agarrá papel y lapicera (o abrí un bloc)','Poné el timer en 3 minutos','Escribí todo lo que pasa por tu cabeza, sin parar, sin corregir, sin juzgar','Si no sabés qué escribir, escribí "no sé qué escribir" hasta que algo aparezca','Cuando suene el timer, cerrá o tirálo — no tenés que releerlo','Respirá 10 segundos y notá si la cabeza está más despejada'],
+    timer:180 },
+
+  { id:'micro_descanso', cat:'foco', ico:'⏸️', title:'Micro-descanso de 10 segundos',
+    when:'Cada 10-20 minutos de trabajo concentrado · después de leer algo importante',
+    intro:'Cerrar los ojos 10-30 segundos después de aprender o concentrarte intensamente multiplica la consolidación. Un estudio del NIH (2021) mostró que estos micro-descansos permiten al cerebro "repetir" lo que acaba de procesar, mejorando la retención 10-20 veces más que sin el descanso. No es pereza: es neurobiología del aprendizaje.',
+    why:'Durante los micro-descansos, el hipocampo "replay" la experiencia reciente a alta velocidad (hasta 10x más rápido que en tiempo real), consolidando el circuito neuronal. Es el mismo proceso del sueño pero accesible en segundos y sin necesitar dormirse.',
+    benefit:'Consolida el aprendizaje 10-20x · gratis · recomendado NIH 2021',
+    steps:['Terminá un bloque de lectura, estudio o trabajo concentrado','Cerrá los ojos (o mirá un punto fijo en blanco)','No hagas nada: solo existí durante 10 a 30 segundos','Abrí los ojos y seguí','Hacelo cada 20 minutos como hábito. Ponete una alarma si te olvidás.','Podés combinarlo con un respiro lento para el doble efecto'] },
+
+  { id:'carta_futuro', cat:'metas', ico:'📬', title:'Carta del yo futuro',
+    when:'Cuando perdés el rumbo, estás bloqueado o querés claridad sobre tu dirección · 15-20 min',
+    intro:'Escribir una carta como si fuera tu yo de dentro de 5 años hablándole a tu yo actual activa el córtex prefrontal medial, asociado a la identidad y la proyección temporal. Los estudios muestran que imaginar el futuro con detalle específico es más efectivo para cambiar el comportamiento hoy que establecer metas tradicionales.',
+    why:'Hablar desde el yo futuro aumenta la "future self continuity": cuanto mayor es la continuidad imaginada con tu yo futuro, mayores son los comportamientos de largo plazo que adoptás hoy. Está medido en neuroimagen y predice mejor el comportamiento que el goal-setting tradicional.',
+    benefit:'Claridad de dirección · activa comportamientos de largo plazo · conexión con propósito',
+    steps:['Sentate tranquilo y cerrá los ojos un momento','Imaginá que ya pasaron 5 años y lograste todo lo que querés','Desde ese yo futuro, escribí una carta a tu yo de hoy','Describí cómo es tu vida ahora (en ese futuro): qué podés ver, sentir, hacer, quién te rodea','Describí qué fue lo más importante que el yo actual hizo para llegar ahí','Terminá con el consejo más importante que te darías hoy','Leé la carta en voz alta cuando termines. Notá cómo te sentís.'],
+    fields:['Tu carta del yo futuro:'] },
+
+  { id:'autocompasion', cat:'calma', ico:'💛', title:'Auto-compasión táctil',
+    when:'Cuando te retás fuerte, te sentís fracasado o la autocrítica es intensa · 2-3 min',
+    intro:'La auto-compasión táctil (Kristin Neff, Harvard) es poner una mano en el pecho, sentir el calor, y hablarte con la misma calidez que le hablarías a un amigo que sufre. Este gesto activa el sistema de cuidado (oxitocina) que literalmente apaga el circuito de autocrítica (que activa cortisol y el sistema de amenaza). No es debilidad: es química del bienestar.',
+    why:'El toque propio en el área del corazón activa el sistema opiáceo endógeno y la oxitocina. Neff demostró que la auto-compasión reduce cortisol y autocrítica mientras aumenta la motivación y la resiliencia, al contrario de lo que la gente cree: la autocrítica no motiva, paraliza.',
+    benefit:'Apaga la autocrítica · activa oxitocina · más motivación y resiliencia',
+    steps:['Notá el momento en que te estás retando con dureza','Ponete una mano en el pecho, sobre el corazón','Sentí el calor y el peso de la mano durante unos segundos','Decite (en voz baja o mentalmente): "Esto es un momento difícil. Sufrir duele. Merezco compasión"','Imaginate diciéndole estas palabras a un amigo querido que está pasando lo mismo','Quedáte 1-2 minutos con la mano en el pecho, respirando lento','Preguntate: ¿qué necesito ahora?'] },
+
+  { id:'hipnagogico', cat:'sueno', ico:'🌙', title:'Protocolo hipnagógico',
+    when:'Justo antes de dormirte · últimos 5 minutos · para programar la mente o resolver algo',
+    intro:'Los últimos minutos antes de quedarte dormido son la "ventana dorada" de acceso al inconsciente. En el estado hipnagógico (entre vigilia y sueño), el cerebro pasa a ondas theta, extremadamente receptivas a la sugestión e intención. Edison, Dalí y Tesla usaban este estado deliberadamente para obtener ideas. No es misticismo: es aprovechamiento del ciclo de sueño.',
+    why:'El estado hipnagógico corresponde a ondas theta (4-8 Hz), donde la actividad del córtex prefrontal baja y el sistema límbico está activo. La información presentada en este estado bypasea el pensamiento crítico y se consolida durante el sueño posterior (consolidación hipnagógica).',
+    benefit:'Accede al inconsciente · consolida intenciones · potencia la calidad del sueño',
+    steps:['En la cama, ojos cerrados, cuerpo ya relajado','Cuando notes que la mente empieza a divagar o a tener imágenes espontáneas (eso es el umbral)','Planta UNA intención o pregunta clara: "mañana encuentro la forma de..." o "soy una persona que..."','No la fuerces: suéltala y confía en que el sueño la trabaja','Al despertar mañana, antes de levantarte, quedáte 30 seg con los ojos cerrados','Notá lo primero que aparece y anótalo'],
+    fields:['¿Qué intención o pregunta vas a sembrar esta noche?','(A la mañana) ¿Qué apareció al despertar?'] },
+
+  { id:'estado_pico', cat:'confianza', ico:'⚡', title:'Modelado de estado pico',
+    when:'Antes de un desafío importante, presentación, venta, negociación · 3 min',
+    intro:'El modelado de estado pico es acceder intencionalmente a tu mejor estado: ese momento en que eras imparable, claro y seguro. Tu cerebro tiene ese estado guardado como un circuito neurológico completo. Con la técnica correcta podés activarlo en 2-3 minutos, incluso bajo presión. No es autoengaño: es memoria de estado y condicionamiento.',
+    why:'La memoria de estado (state-dependent memory) demuestra que podés acceder a recursos cognitivos y emocionales recreando las condiciones fisiológicas asociadas. Postura + respiración + imagen mental funcionan como disparadores de circuitos completos de funcionamiento óptimo.',
+    benefit:'Activa tu mejor versión · acceso a recursos internos · confianza instantánea',
+    steps:['Recordá un momento en que estabas en tu mejor estado: seguro, claro, imparable','Cerrá los ojos y reviví ese momento en primera persona: ¿qué ves, qué escuchás, qué sentís en el cuerpo?','Amplificá la imagen: más grande, más brillante, más cercana, más colores','Cuando la sensación esté al máximo, creá un ancla: apretá el puño o juntá los 3 dedos con fuerza','Salí, relajate 5 seg y repetí 5 veces: entrá al estado → amplificá → ancla → salí → repetí','En el momento de necesitarlo: activá el ancla + postura de poder + una respiración lenta'] },
+
+  { id:'focusing', cat:'calma', ico:'🫀', title:'Focusing de Gendlin',
+    when:'Cuando algo te pasa pero no podés identificarlo · tensión vaga sin nombre · bloqueo emocional',
+    intro:'El Focusing de Eugene Gendlin (Universidad de Chicago) es la práctica de rastrear la "sensación sentida" (felt sense) de un problema en el cuerpo hasta que algo hace clic. Tu cuerpo sabe lo que tu mente no puede articular. Cuando encontrás la palabra o imagen exacta que describe lo que sentís en el cuerpo, algo se mueve, literalmente.',
+    why:'Gendlin identificó que los pacientes con éxito en terapia compartían una habilidad: rastrear sensaciones corporales vagas y nombrarlas. El cuerpo procesa información en paralelo al pensamiento consciente. El Focusing accede a ese procesamiento sublinguístico y lo vuelve articulable.',
+    benefit:'Accede a sabiduría corporal · resuelve bloqueos emocionales · alivio real',
+    steps:['Cerrá los ojos y hacé 3 respiraciones lentas','Llevá la atención al cuerpo: ¿dónde sentís algo relacionado con el problema? ¿Pecho, garganta, vientre?','No analices: solo observá la sensación. ¿Es tensión, peso, vacío, presión, frío?','Intentá nombrarla con una palabra o imagen: ¿"opresión", "nudo", "niebla", "piedra"?','Cuando encontrás la palabra exacta, notás una pequeña sensación de reconocimiento o alivio. Ese es el clic.','Preguntale a esa sensación: ¿qué necesita? ¿qué quiere que sepa?','Quedáte con lo que aparece sin analizarlo. Agradecéle al cuerpo.'] },
+
+  { id:'valores_encarnados', cat:'metas', ico:'🧭', title:'Valores encarnados',
+    when:'Cuando tomás decisiones que después lamentás · para alinear acción con propósito · 5 min',
+    intro:'Conocer tus valores intelectualmente no alcanza: tenés que encarnarlos, sentirlos en el cuerpo, para que guíen tus decisiones automáticamente. Esta práctica conecta cada valor con una sensación física específica. Así, cuando tengas que decidir rápido bajo presión, tu cuerpo ya sabe la respuesta antes que tu mente.',
+    why:'Las decisiones rápidas se toman por marcadores somáticos (Damasio): señales corporales asociadas a experiencias pasadas. Si encarnas tus valores físicamente, los incorporás al sistema de decisión rápida del cuerpo, no solo al análisis lento consciente.',
+    benefit:'Decisiones alineadas con lo que importa · menos arrepentimiento · propósito encarnado',
+    steps:['Escribí tus 3-5 valores más importantes (libertad, honestidad, familia, crecimiento, salud...)','Para cada uno: cerrá los ojos y pensá en un momento en que ese valor estuvo vivo al máximo','¿Cómo lo sentís en el cuerpo? ¿Expansión en el pecho, calor, ligereza, fuerza?','Escribí esa sensación física para cada valor','Antes de una decisión importante: preguntate cuál opción honra más ese valor y notá la respuesta corporal antes de analizar'],
+    fields:['Tus 3-5 valores principales','Para cada uno: ¿dónde y cómo lo sentís en el cuerpo cuando está vivo?'] }
 ];
 const TOOLCAT={miedo:'relaciones',sonrisa:'confianza',difusion:'creencias',placer:'calma',expectativas:'calma',mindfulness:'calma',precompe:'confianza'};
 
@@ -1038,7 +1295,23 @@ const TOOL_SLOTS={
   estira_noche:['noche'],
   /* meditación */
   meditacion_manana:['manana'],meditacion_noche:['noche'],
-  meditacion_scan:['tarde','noche']
+  meditacion_scan:['tarde','noche'],
+  /* neurohacks */
+  havening:['manana','tarde','noche'],eft_tapping:['manana','tarde','noche'],
+  coherencia_cardiaca:['manana','tarde','noche'],emdr:['tarde','noche'],
+  vago_estimulacion:['manana','tarde','noche'],cold_face:['tarde','noche'],
+  /* nlp */
+  swish_pattern:['manana','noche'],linea_tiempo:['manana','noche'],
+  submodalidades:['manana','tarde'],reencuadre:['manana','tarde'],
+  tecnica_cubo:['noche'],disociacion:['tarde','noche'],
+  /* kriyas */
+  isha_kriya:['manana','noche'],yoga_namaskar:['manana'],
+  mahamudra:['manana','tarde'],sukha_kriya:['manana','tarde'],
+  /* extras nuevos */
+  escritura_descarga:['manana','tarde'],micro_descanso:['manana','tarde'],
+  carta_futuro:['manana','noche'],autocompasion:['tarde','noche'],
+  hipnagogico:['noche'],estado_pico:['manana','tarde'],
+  focusing:['tarde','noche'],valores_encarnados:['manana','noche']
 };
 const SLOT_LABEL={manana:'☀️ Mañana',tarde:'🌤️ Tarde',noche:'🌙 Noche'};
 const CATS=[
@@ -1051,7 +1324,10 @@ const CATS=[
   {id:'calma',ico:'🧘',name:'Calma y ansiedad',desc:'Bajá el estrés y la mente acelerada'},
   {id:'foco',ico:'🔥',name:'Foco y rendimiento',desc:'Concentración profunda y energía'},
   {id:'estiramiento',ico:'🤸',name:'Estiramiento y movimiento',desc:'Soltá la tensión del cuerpo — mañana, tarde o noche'},
-  {id:'meditacion',ico:'🧘',name:'Meditación',desc:'Calma profunda y presencia para cualquier momento del día'}
+  {id:'meditacion',ico:'🧘',name:'Meditación',desc:'Calma profunda y presencia para cualquier momento del día'},
+  {id:'neurohacks',ico:'🧪',name:'Neurohacks',desc:'Técnicas que parecen magia pero son neurociencia pura'},
+  {id:'nlp',ico:'🎯',name:'NLP Avanzado',desc:'Programación neurolingüística para reprogramar la mente'},
+  {id:'kriyas',ico:'🕉️',name:'Yoga y Kriyas',desc:'Prácticas ancestrales con base en neurociencia moderna'}
 ];
 function toolsOf(catId){return EXTRAS.filter(x=>(x.cat||TOOLCAT[x.id])===catId)}
 let currentCat=null;
@@ -1109,10 +1385,16 @@ function toolCardHTML(x, routineSlot){
       <div class="row"><div class="lbl">🔬 La ciencia detrás</div><p>${x.why}</p></div>
       ${x.benefit?`<div class="row"><span class="benefit">${x.benefit}</span></div>`:''}
       <div class="row"><div class="lbl">Cómo se hace</div><ul class="steps">${x.steps.map((s,i)=>`<li class="${stepsDone[i]?'on':''}" onclick="${stepHandler},${i})"><span class="b">✓</span>${s}</li>`).join('')}</ul></div>
-      ${x.timer&&!x.breath478?`<div class="timer"><div class="num" id="tn_${x.id}${routineSlot||''}">${fmt(x.timer)}</div><button onclick="startTimer('${x.id}${routineSlot||''}',${x.timer},false)">Iniciar</button><div class="hint">${fmt(x.timer)} · seguí los pasos</div></div>`:''}
+      ${x.timer&&!x.breath478&&!x.breathCoherence&&!x.hasEMDR?`<div class="timer"><div class="num" id="tn_${x.id}${routineSlot||''}">${fmt(x.timer)}</div><button onclick="startTimer('${x.id}${routineSlot||''}',${x.timer},false)">Iniciar</button><div class="hint">Suena al terminar · ${fmt(x.timer)}</div><div class="timerBar"><div class="fill" id="tb_${x.id}${routineSlot||''}"></div></div></div>`:''}
       ${x.breath478?`<div class="orb-wrap"><div class="orb" id="orb_${x.id}" style="font-size:32px;font-weight:800">▶</div></div>
       <p style="text-align:center;color:var(--muted);font-size:13px;margin:6px 0 10px" id="cue_${x.id}">Inhalá 4 · Retené 7 · Exhalá 8</p>
-      <div class="timer"><div class="num" id="tn_${x.id}">5:00</div><button id="btn478_${x.id}" onclick="start478('${x.id}')">Iniciar (5 min)</button><div class="hint">Seguí el orbe · el número es la cuenta regresiva</div></div>`:''}
+      <div class="timer"><div class="num" id="tn_${x.id}">5:00</div><button id="btn478_${x.id}" onclick="start478('${x.id}')">Iniciar (5 min)</button><div class="hint">Seguí el orbe · suena al terminar</div><div class="timerBar"><div class="fill" id="tb_478_${x.id}"></div></div></div>`:''}
+      ${x.breathCoherence?`<div class="orb-wrap"><div class="orb" id="orb_coh_${x.id}">▶</div></div>
+      <p style="text-align:center;color:var(--muted);font-size:13px;margin:6px 0 10px" id="cue_coh_${x.id}">Inhalá 5 · Exhalá 5 · sincroniza corazón y cerebro</p>
+      <div class="timer"><div class="num" id="tn_coh_${x.id}">5:00</div><button id="btn_coh_${x.id}" onclick="startCoherence('${x.id}')">Iniciar (5 min)</button><div class="hint">Seguí el orbe · suena al terminar</div><div class="timerBar"><div class="fill" id="tb_coh_${x.id}"></div></div></div>`:''}
+      ${x.hasEMDR?`<div class="emdrTrack"><div class="emdrDot" id="emdr_${x.id}"></div></div>
+      <p style="text-align:center;color:var(--muted);font-size:12px;margin:-6px 0 10px">Seguí el punto con los ojos · sin mover la cabeza</p>
+      <div class="timer"><div class="num" id="tn_emdr_${x.id}">2:00</div><button id="btn_emdr_${x.id}" onclick="startEMDR('${x.id}')">Iniciar (2 min)</button><div class="hint">Ojos abiertos · seguí el punto · suena al terminar</div><div class="timerBar"><div class="fill" id="tb_emdr_${x.id}"></div></div></div>`:''}
       ${x.fields&&!inRoutine?`<div class="row"><div class="lbl">✍️ Tu espacio para escribir</div>
         <p class="saveHint">💾 Se guarda solo en este dispositivo. Podés cerrar y volver cuando quieras.</p>
         ${x.fields.map((f,i)=>`<label class="fieldLbl">${f}</label><textarea class="noteArea" rows="2" placeholder="Escribí acá..." oninput="noteSave('${x.id}',${i},this.value)">${(N[i]||'').replace(/</g,'&lt;')}</textarea>`).join('')}
@@ -1222,6 +1504,7 @@ function start478(id){
     if(btn)btn.textContent='Iniciar (5 min)';return;
   }
   const sess={stopped:false};s478[id]=sess;
+  AUDIO.start();
   if(btn)btn.textContent='Detener';
   orb.style.fontSize='36px';
   let elapsed=0;
@@ -1233,11 +1516,13 @@ function start478(id){
       orb.style.transitionDuration='';orb.className='orb';orb.style.fontSize='22px';orb.textContent='✓';
       cue.textContent='5 minutos completos. Tu sistema nervioso lo agradeció. 🌿';
       if(btn)btn.textContent='Iniciar (5 min)';
+      AUDIO.end();
       toast('🫁 Respiración 4-7-8 completa. Excelente.');
     }
   },1000);
   function cd(secs,cls,dur,cueText,cb){
     let n=secs;
+    AUDIO.phase();
     orb.style.transitionDuration=dur;orb.className='orb '+cls;orb.textContent=n;cue.textContent=cueText;
     const iv=setInterval(()=>{
       if(sess.stopped){clearInterval(iv);return;}
@@ -1255,6 +1540,83 @@ function start478(id){
     });
   }
   cycle();
+}
+
+/* ---------- Coherencia cardíaca (5-5) ---------- */
+const sCoherence={};
+function startCoherence(id){
+  const orb=document.getElementById('orb_coh_'+id),cue=document.getElementById('cue_coh_'+id),
+        num=document.getElementById('tn_coh_'+id),btn=document.getElementById('btn_coh_'+id);
+  if(sCoherence[id]){
+    sCoherence[id].stopped=true;clearInterval(sCoherence[id].iv);delete sCoherence[id];
+    if(orb){orb.style.transitionDuration='';orb.className='orb';orb.textContent='▶';}
+    if(cue)cue.textContent='Inhalá 5 · Exhalá 5 · sincroniza corazón y cerebro';
+    if(num)num.textContent='5:00';if(btn)btn.textContent='Iniciar (5 min)';
+    const bar=document.getElementById('tb_coh_'+id);if(bar){bar.style.transition='none';bar.style.width='100%';}
+    return;
+  }
+  AUDIO.start();
+  const sess={stopped:false};sCoherence[id]=sess;
+  if(btn)btn.textContent='Detener';
+  let elapsed=0;
+  const bar=document.getElementById('tb_coh_'+id);if(bar)bar.style.width='100%';
+  sess.iv=setInterval(()=>{
+    elapsed++;const left=300-elapsed;
+    if(num)num.textContent=fmt(left);
+    if(bar)bar.style.width=Math.round(left/300*100)+'%';
+    if(left<=0){
+      sess.stopped=true;clearInterval(sess.iv);delete sCoherence[id];
+      if(orb){orb.style.transitionDuration='';orb.className='orb';orb.textContent='💙';}
+      if(cue)cue.textContent='5 min. Corazón y cerebro en sincronía. 💙';
+      if(btn)btn.textContent='Iniciar (5 min)';
+      if(bar){bar.style.transition='none';bar.style.width='0%';}
+      AUDIO.end();toast('💙 Coherencia cardíaca completa.');
+    }
+  },1000);
+  function cycle(){
+    if(sess.stopped)return;
+    AUDIO.phase();
+    if(orb){orb.style.transitionDuration='5s';orb.className='orb in';orb.textContent='Inhalá';}
+    if(cue)cue.textContent='Inhalá · 5 segundos...';
+    setTimeout(()=>{
+      if(sess.stopped)return;
+      AUDIO.phase();
+      if(orb){orb.style.transitionDuration='5s';orb.className='orb out';orb.textContent='Exhalá';}
+      if(cue)cue.textContent='Exhalá · 5 segundos...';
+      setTimeout(()=>cycle(),5000);
+    },5000);
+  }
+  cycle();
+}
+
+/* ---------- EMDR ---------- */
+const sEMDR={};
+function startEMDR(id){
+  const dot=document.getElementById('emdr_'+id),num=document.getElementById('tn_emdr_'+id),
+        btn=document.getElementById('btn_emdr_'+id);
+  if(sEMDR[id]){
+    clearInterval(sEMDR[id].iv);clearInterval(sEMDR[id].mv);delete sEMDR[id];
+    if(dot)dot.className='emdrDot';if(num)num.textContent='2:00';
+    if(btn)btn.textContent='Iniciar (2 min)';return;
+  }
+  AUDIO.start();
+  const sess={};sEMDR[id]=sess;
+  if(btn)btn.textContent='Detener';
+  let elapsed=0,right=false;
+  const bar=document.getElementById('tb_emdr_'+id);if(bar)bar.style.width='100%';
+  sess.iv=setInterval(()=>{
+    elapsed++;const left=120-elapsed;
+    if(num)num.textContent=fmt(left);
+    if(bar)bar.style.width=Math.round(left/120*100)+'%';
+    if(left<=0){
+      clearInterval(sess.iv);clearInterval(sess.mv);delete sEMDR[id];
+      if(dot)dot.className='emdrDot';if(num)num.textContent='✓ Listo';
+      if(bar){bar.style.transition='none';bar.style.width='0%';}
+      AUDIO.end();toast('EMDR completo. Notá cómo te sentís ahora.');
+      if(btn)btn.textContent='Iniciar (2 min)';
+    }
+  },1000);
+  sess.mv=setInterval(()=>{right=!right;if(dot)dot.classList.toggle('r',right);},800);
 }
 
 /* ---------- PROFILE TEST ---------- */
